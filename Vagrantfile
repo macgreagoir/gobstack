@@ -4,7 +4,8 @@
 repo_update = "echo 'deb http://ubuntu-cloud.archive.canonical.com/ubuntu "
 repo_update << "precise-proposed/grizzly main' > /etc/apt/sources.list.d/grizzly.list; "
 repo_update << "sed -i 's|/us\.|/uk\.|' /etc/apt/sources.list; "
-repo_update << "apt-get update; apt-get install -y ubuntu-cloud-keyring"
+repo_update << "apt-get update; apt-get install -y ubuntu-cloud-keyring; "
+repo_update << "apt-get update"
 
 # 'node_type' => [num_nodes, starting_ip_addr]
 nodes = {
@@ -14,6 +15,7 @@ nodes = {
 
 Vagrant.configure("2") do |config|
   config.vm.box = "precise64"
+  config.vm.box_url = "http://files.vagrantup.com/precise64.box"
 
   nodes.each do |node_type, (count, ip_addr)|
     count.times do |i|

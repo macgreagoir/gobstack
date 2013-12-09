@@ -6,7 +6,6 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-apt-get update
 # use nova-compute-qemu to avoid kvm inside a VM
 apt-get install -y \
   ntp \

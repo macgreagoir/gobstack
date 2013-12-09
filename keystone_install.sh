@@ -24,7 +24,6 @@ mysql-server-5.5 mysql-server/root_password_again seen true
 "  | debconf-set-selections
 
 export DEBIAN_FRONTEND=noninteractive
-apt-get update
 apt-get install -y mysql-server python-mysqldb
 sed -i "s/^bind\-address.*/bind\-address = ${CONTROLLER_PUBLIC_IP}/" \
   /etc/mysql/my.cnf
