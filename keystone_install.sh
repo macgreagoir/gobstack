@@ -102,9 +102,10 @@ keystone service-create --name ec2 --type ec2 --description "EC2 Service"
 keystone service-create --name glance --type image --description "OpenStack Image Service"
 keystone service-create --name keystone --type identity --description "OpenStack Identity Service"
 keystone service-create --name volume --type volume --description "Volume Service"
+keystone service-create --name swift --type object-store --description "OpenStack Storage Service"
 
 NOVA_SERVICE_ID=`keystone service-list | awk '/\ nova\ / {print $2}'`
-NOVA_PUBLIC_URL="http://${CONTROLLER_PUBLIC_IP}:8774/v2/\$(tenant_id)s"
+NOVA_PUBLIC_URL="http://${CONTROLLER_PUBLIC_IP}:8774/v2/%(tenant_id)s"
 NOVA_ADMIN_URL=$NOVA_PUBLIC_URL
 NOVA_INTERNAL_URL=$NOVA_PUBLIC_URL
 keystone endpoint-create --region RegionOne \
@@ -124,7 +125,7 @@ keystone endpoint-create --region RegionOne \
   --internalurl $EC2_INTERNAL_URL
 
 GLANCE_SERVICE_ID=`keystone service-list | awk '/\ glance\ / {print $2}'`
-GLANCE_PUBLIC_URL="http://${CONTROLLER_PUBLIC_IP}:9292/v1"
+GLANCE_PUBLIC_URL="http://${CONTROLLER_PUBLIC_IP}:9292"
 GLANCE_ADMIN_URL=$GLANCE_PUBLIC_URL
 GLANCE_INTERNAL_URL=$GLANCE_PUBLIC_URL
 keystone endpoint-create --region RegionOne \
@@ -144,7 +145,7 @@ keystone endpoint-create --region RegionOne \
   --internalurl $KEYSTONE_INTERNAL_URL
 
 CINDER_SERVICE_ID=`keystone service-list | awk '/\ volume\ / {print $2}'`
-CINDER_PUBLIC_URL="http://${CONTROLLER_PUBLIC_IP}:8776/v1/\$(tenant_id)s"
+CINDER_PUBLIC_URL="http://${CONTROLLER_PUBLIC_IP}:8776/v1/%(tenant_id)s"
 CINDER_ADMIN_URL=$CINDER_PUBLIC_URL
 CINDER_INTERNAL_URL=$CINDER_PUBLIC_URL
 keystone endpoint-create --region RegionOne \
@@ -152,6 +153,16 @@ keystone endpoint-create --region RegionOne \
   --publicurl $CINDER_PUBLIC_URL \
   --adminurl $CINDER_ADMIN_URL \
   --internalurl $CINDER_INTERNAL_URL
+
+SWIFT_SERVICE_ID=`keystone service-list | awk '/\ swift\ / {print $2}'`
+SWIFT_PUBLIC_URL="http://${STORAGE_PUBLIC_IP}:8080/v1/AUTH_%(tenant_id)s"
+SWIFT_ADMIN_URL="http://${STORAGE_PUBLIC_IP}:8080/v1"
+SWIFT_INTERNAL_URL=$SWIFT_PUBLIC_URL
+keystone endpoint-create --region RegionOne \
+  --service_id $SWIFT_SERVICE_ID \
+  --publicurl $SWIFT_PUBLIC_URL \
+  --adminurl $SWIFT_ADMIN_URL \
+  --internalurl $SWIFT_INTERNAL_URL
 
 keystone service-list
 
@@ -164,6 +175,7 @@ keystone user-create --name nova --pass nova --tenant_id $SERVICE_TENANT_ID --em
 keystone user-create --name glance --pass glance --tenant_id $SERVICE_TENANT_ID --email glance@localhost --enabled true
 keystone user-create --name keystone --pass keystone --tenant_id $SERVICE_TENANT_ID --email keystone@localhost --enabled true
 keystone user-create --name cinder --pass cinder --tenant_id $SERVICE_TENANT_ID --email cinder@localhost --enabled true
+keystone user-create --name swift --pass swift --tenant_id $SERVICE_TENANT_ID --email swift@localhost --enabled true
 
 NOVA_USER_ID=`keystone user-list | awk '/\ nova\ / {print $2}'`
 keystone user-role-add --user $NOVA_USER_ID --role $ADMIN_ROLE_ID --tenant_id $SERVICE_TENANT_ID
@@ -173,5 +185,7 @@ KEYSTONE_USER_ID=`keystone user-list | awk '/\ keystone\ / {print $2}'`
 keystone user-role-add --user $KEYSTONE_USER_ID --role $ADMIN_ROLE_ID --tenant_id $SERVICE_TENANT_ID
 CINDER_USER_ID=`keystone user-list | awk '/\ cinder\ / {print $2}'`
 keystone user-role-add --user $CINDER_USER_ID --role $ADMIN_ROLE_ID --tenant_id $SERVICE_TENANT_ID
+SWIFT_USER_ID=`keystone user-list | awk '/\ swift\ / {print $2}'`
+keystone user-role-add --user $SWIFT_USER_ID --role $ADMIN_ROLE_ID --tenant_id $SERVICE_TENANT_ID
 
 keystone user-list

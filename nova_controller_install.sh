@@ -45,9 +45,22 @@ nova-manage network create private \
   --bridge_interface=${PRIVATE_INTERFACE}
 nova-manage floating create --ip_range=${NOVA_FLOATING_RANGE}
 
-# write out nova api-paste.ini for keystone
+# write out nova api-paste.ini for keystone; includes service restarts
 source ${BASH_SOURCE%/*}/nova_api_paste_ini.sh
 
 sleep 3
 nova net-list
 nova-manage service list
+
+# we should have a 'default' security group
+# add SSH access and ping
+nova secgroup-add-rule default tcp 22 22 0.0.0.0/0
+nova secgroup-add-rule default icmp -1 -1 0.0.0.0/0
+nova secgroup-list
+nova secgroup-list-rules default
+
+# create a keypair for the vagrant user as demo user
+OS_USERNAME=demo nova keypair-add vagrant > ~vagrant/.ssh/vagrant.pem
+chmod 0600 ~vagrant/.ssh/vagrant.pem
+nova keypair-list
+
