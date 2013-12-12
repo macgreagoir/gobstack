@@ -15,6 +15,9 @@ Scripted openstack installation using Vagrant
     vagrant@controller0:~$ sudo /vagrant/nova_controller_install.sh
     ```
 
+0. Install swift on the storage node:
+    `you@host:~$ vagrant ssh storage0 -c "sudo /vagrant/swift_install.sh"`
+
 0. Install nova on the compute nodes:
     `you@host:~$ for i in 0 1; do vagrant ssh compute$i -c "sudo /vagrant/nova_compute_install.sh"; done`
 
