@@ -14,9 +14,15 @@ apt-get install -y \
   nova-api-metadata \
   nova-compute-qemu
 
+# let it route
+sysctl -w net.ipv4.ip_forward=1
+
 # write out nova.conf
 source ${BASH_SOURCE%/*}/nova_conf.sh
 
 # write out nova api-paste.ini for keystone
 source ${BASH_SOURCE%/*}/nova_api_paste_ini.sh
-service libvirt-bin restart
+
+# restart 'em all
+source ${BASH_SOURCE%/*}/nova_restart.sh
+

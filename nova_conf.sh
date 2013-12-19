@@ -47,7 +47,12 @@ verbose=True
 auto_assign_floating_ip=True
 dhcpbridge=/usr/bin/nova-dhcpbridge
 dhcpbridge_flagfile=/etc/nova/nova.conf
+fixed_range=${NOVA_FIXED_RANGE}
+flat_interface=${PRIVATE_INTERFACE}
+flat_network_bridge=br100
 force_dhcp_release=True
+multi_host=true
+network_manager=nova.network.manager.FlatDHCPManager
 public_interface=${PUBLIC_INTERFACE}
 
 # object storage

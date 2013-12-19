@@ -24,7 +24,7 @@ done
 
 nova show $DEMO_INSTANCE_ID
 
-if [ -z "$INSTANCE_IP" ]; then
+if [ -n "$INSTANCE_IP" ]; then
   ping -c 9 ${INSTANCE_IP}
   echo "Whistle a happy tune and give ssh a chance to start on ${INSTANCE_IP}..."
   echo "ssh cirros@${INSTANCE_IP} with passwd 'cubswin:)'"

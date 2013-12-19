@@ -33,6 +33,7 @@ Vagrant.configure("2") do |config|
           if node_type == "compute"
             vbox.customize ["modifyvm", :id, "--memory", 1024]
             vbox.customize ["modifyvm", :id, "--cpus", 2]
+            vbox.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
           else
             vbox.customize ["modifyvm", :id, "--memory", 512]
             vbox.customize ["modifyvm", :id, "--cpus", 1]

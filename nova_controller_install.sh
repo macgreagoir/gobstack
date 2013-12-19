@@ -42,13 +42,16 @@ nova-manage db sync
 nova-manage network create private \
   --fixed_range_v4=${NOVA_FIXED_RANGE} \
   --network_size=64 \
+  --bridge=br100 \
   --bridge_interface=${PRIVATE_INTERFACE}
 nova-manage floating create --ip_range=${NOVA_FLOATING_RANGE}
 
-# write out nova api-paste.ini for keystone; includes service restarts
+# write out nova api-paste.ini for keystone
 source ${BASH_SOURCE%/*}/nova_api_paste_ini.sh
 
-sleep 3
+# restart 'em all
+source ${BASH_SOURCE%/*}/nova_restart.sh
+
 nova net-list
 nova-manage service list
 
@@ -62,5 +65,12 @@ nova secgroup-list-rules default
 # create a keypair for the vagrant user as demo user
 OS_USERNAME=demo nova keypair-add vagrant > ~vagrant/.ssh/vagrant.pem
 chmod 0600 ~vagrant/.ssh/vagrant.pem
+chown vagrant:vagrant ~vagrant/.ssh/vagrant.pem
 nova keypair-list
+
+# this is handy
+grep export ${BASH_SOURCE%/*}/defaults.sh > ~vagrant/stackrc
+sed -i "s/\${CONTROLLER_PUBLIC_IP}/${CONTROLLER_PUBLIC_IP}/" ~vagrant/stackrc
+chmod 0750 ~vagrant/stackrc
+chown vagrant:vagrant ~vagrant/stackrc
 

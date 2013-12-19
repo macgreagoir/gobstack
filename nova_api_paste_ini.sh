@@ -28,5 +28,3 @@ service_protocol = http
 
 APIP
 
-for s in `ls /etc/init/nova-* | cut -d '/' -f4 | cut -d '.' -f1`
-do service $s restart; done
