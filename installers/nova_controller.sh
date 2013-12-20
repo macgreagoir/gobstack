@@ -6,7 +6,7 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-source ${BASH_SOURCE%/*}/defaults.sh
+source ${BASH_SOURCE%/*}/../defaults.sh
 
 
 # this to check we are on the controller
@@ -33,7 +33,7 @@ mysql -uroot -p${MYSQL_ROOT_PASS} -e \
   "GRANT ALL ON nova.* TO 'nova'@'localhost' IDENTIFIED BY '${MYSQL_NOVA_PASS}';"
 
 # write out nova.conf
-source ${BASH_SOURCE%/*}/nova_conf.sh
+source ${BASH_SOURCE%/*}/../files/nova_conf.sh
 
 # populate the db
 nova-manage db sync
@@ -47,10 +47,10 @@ nova-manage network create private \
 nova-manage floating create --ip_range=${NOVA_FLOATING_RANGE}
 
 # write out nova api-paste.ini for keystone
-source ${BASH_SOURCE%/*}/nova_api_paste_ini.sh
+source ${BASH_SOURCE%/*}/../files/nova_api_paste_ini.sh
 
 # restart 'em all
-source ${BASH_SOURCE%/*}/nova_restart.sh
+source ${BASH_SOURCE%/*}/../tools/nova_restart.sh
 
 nova net-list
 nova-manage service list
@@ -69,7 +69,7 @@ chown vagrant:vagrant ~vagrant/.ssh/vagrant.pem
 nova keypair-list
 
 # this is handy
-grep export ${BASH_SOURCE%/*}/defaults.sh > ~vagrant/stackrc
+grep export ${BASH_SOURCE%/*}/../defaults.sh > ~vagrant/stackrc
 sed -i "s/\${CONTROLLER_PUBLIC_IP}/${CONTROLLER_PUBLIC_IP}/" ~vagrant/stackrc
 sed -i "s/\${DEMO_TENANT_NAME}/${DEMO_TENANT_NAME}/" ~vagrant/stackrc
 chmod 0750 ~vagrant/stackrc

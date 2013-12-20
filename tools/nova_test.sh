@@ -6,7 +6,7 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-source ${BASH_SOURCE%/*}/defaults.sh
+source ${BASH_SOURCE%/*}/../defaults.sh
 
 echo "Are the compute nodes OK?"
 nova-manage service list

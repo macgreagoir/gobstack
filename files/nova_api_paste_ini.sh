@@ -6,7 +6,7 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-source ${BASH_SOURCE%/*}/defaults.sh
+source ${BASH_SOURCE%/*}/../defaults.sh
 
 # rm the filter:authtoken block and replace
 sed -i '/\[filter\:authtoken\]/,/^$/d' /etc/nova/api-paste.ini

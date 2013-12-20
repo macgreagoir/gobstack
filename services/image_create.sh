@@ -1,7 +1,7 @@
 #!/bin/bash
 ## upload and manage an image
 
-source ${BASH_SOURCE%/*}/defaults.sh
+source ${BASH_SOURCE%/*}/../defaults.sh
 
 if [[ -z `ip addr | grep "${CONTROLLER_PUBLIC_IP}"` ]]; then
   echo "This script expects an interface with ${CONTROLLER_PUBLIC_IP}" 1>&2

@@ -6,7 +6,7 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-source ${BASH_SOURCE%/*}/defaults.sh
+source ${BASH_SOURCE%/*}/../defaults.sh
 
 # this expects to run on a storage node
 if [[ -z `ip addr | grep "${STORAGE_PUBLIC_IP}"` ]]; then

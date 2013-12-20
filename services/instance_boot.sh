@@ -2,7 +2,7 @@
 ## Example boot/creation of an instance
 # run this as vagrant@controller0
  
-source ${BASH_SOURCE%/*}/defaults.sh
+source ${BASH_SOURCE%/*}/../defaults.sh
 # ...but we want to be the tenant's non-admin user
 unset OS_USERNAME
 export OS_USERNAME=$OS_TENANT_NAME

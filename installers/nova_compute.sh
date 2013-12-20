@@ -18,11 +18,11 @@ apt-get install -y \
 sysctl -w net.ipv4.ip_forward=1
 
 # write out nova.conf
-source ${BASH_SOURCE%/*}/nova_conf.sh
+source ${BASH_SOURCE%/*}/../files/nova_conf.sh
 
 # write out nova api-paste.ini for keystone
-source ${BASH_SOURCE%/*}/nova_api_paste_ini.sh
+source ${BASH_SOURCE%/*}/../files/nova_api_paste_ini.sh
 
 # restart 'em all
-source ${BASH_SOURCE%/*}/nova_restart.sh
+source ${BASH_SOURCE%/*}/../tools/nova_restart.sh
 
