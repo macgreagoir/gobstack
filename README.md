@@ -13,7 +13,7 @@ The script `./bootstrap.sh` will do this:
     ``` 
     vagrant@controller0:~$ sudo /vagrant/keystone_install.sh
     vagrant@controller0:~$ sudo /vagrant/glance_install.sh
-    vagrant@controller0:~$ sudo /vagrant/glance_image_test.sh
+    vagrant@controller0:~$ sudo /vagrant/glance_image_create.sh
     vagrant@controller0:~$ sudo /vagrant/nova_controller_install.sh
     ``` 
 
@@ -26,5 +26,5 @@ The script `./bootstrap.sh` will do this:
 ***
 Now you can boot an instance from controller0
 
-`you@host:~$ vagrant ssh controller0 -c "sudo /vagrant/instance_boot.sh"`
+`you@host:~$ vagrant ssh controller0 -c "/vagrant/instance_boot.sh"`
 

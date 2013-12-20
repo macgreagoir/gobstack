@@ -59,8 +59,9 @@ service keystone restart
 keystone-manage db_sync
 
 ## now for some tenants, roles and users
+# as assigned in deafults.sh
 keystone tenant-create --name admin --description "Admin Tenant" --enabled true
-keystone tenant-create --name demo --description "Default Demo Tenant" --enabled true
+keystone tenant-create --name $DEMO_TENANT_NAME --description "$DEMO_TENANT_DESC" --enabled true
 
 # for /etc/keystone/policy.json
 keystone role-create --name admin
@@ -68,27 +69,27 @@ keystone role-create --name admin
 keystone role-create --name Member
 
 ADMIN_TENANT_ID=`keystone tenant-list | awk '/\ admin\ / {print $2}'`
-DEMO_TENANT_ID=`keystone tenant-list | awk '/\ demo\ / {print $2}'`
-# users have same passwd in this example
-DEMO_TENANT_PASS=openstack
+DEMO_TENANT_ID=`keystone tenant-list | awk "/\ ${DEMO_TENANT_NAME}\ / {print \\$2}"`
+
 ADMIN_ROLE_ID=`keystone role-list | awk '/\ admin\ / {print $2}'`
 MEMBER_ROLE_ID=`keystone role-list | awk '/\ Member\ / {print $2}'`
 
-keystone user-create --name admin \
-  --tenant_id $DEMO_TENANT_ID --pass $DEMO_TENANT_PASS \
+# from defaults.sh, the OS_* vars refer to the admin user in this tenant
+keystone user-create --name $OS_USERNAME \
+  --tenant_id $DEMO_TENANT_ID --pass $OS_PASSWORD \
   --email root@localhost --enabled true
-ADMIN_USER_ID=`keystone user-list | awk '/\ admin\ / {print $2}'`
+ADMIN_USER_ID=`keystone user-list | awk "/\ ${OS_USERNAME}\ / {print \\$2}"`
 
-keystone user-create --name demo \
-  --tenant_id $DEMO_TENANT_ID --pass $DEMO_TENANT_PASS \
-  --email demo@localhost --enabled true
-DEMO_USER_ID=`keystone user-list| awk '/\ demo\ / {print $2}'`
+keystone user-create --name $DEMO_USERNAME \
+  --tenant_id $DEMO_TENANT_ID --pass $DEMO_PASSWORD \
+  --email ${DEMO_USERNAME}@localhost --enabled true
+DEMO_USER_ID=`keystone user-list| awk "/\ ${DEMO_USERNAME}\ / {print \\$2}"`
 
-# give admin user admin role in admin tenant and demo tenant
+# give admin user admin role in admin tenant and our example tenant
 keystone user-role-add --user $ADMIN_USER_ID --role $ADMIN_ROLE_ID --tenant_id $ADMIN_TENANT_ID
 keystone user-role-add --user $ADMIN_USER_ID --role $ADMIN_ROLE_ID --tenant_id $DEMO_TENANT_ID
 
-# give demo user Member role in demo tenant
+# give non-admin user Member role in our example tenant
 keystone user-role-add --user $DEMO_USER_ID --role $MEMBER_ROLE_ID --tenant_id $DEMO_TENANT_ID
 
 keystone tenant-list

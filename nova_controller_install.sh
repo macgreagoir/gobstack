@@ -62,8 +62,8 @@ nova secgroup-add-rule default icmp -1 -1 0.0.0.0/0
 nova secgroup-list
 nova secgroup-list-rules default
 
-# create a keypair for the vagrant user as demo user
-OS_USERNAME=demo nova keypair-add vagrant > ~vagrant/.ssh/vagrant.pem
+# create a keypair for the vagrant user as the non-admin user
+OS_USERNAME=$DEMO_USERNAME nova keypair-add vagrant > ~vagrant/.ssh/vagrant.pem
 chmod 0600 ~vagrant/.ssh/vagrant.pem
 chown vagrant:vagrant ~vagrant/.ssh/vagrant.pem
 nova keypair-list
@@ -71,6 +71,7 @@ nova keypair-list
 # this is handy
 grep export ${BASH_SOURCE%/*}/defaults.sh > ~vagrant/stackrc
 sed -i "s/\${CONTROLLER_PUBLIC_IP}/${CONTROLLER_PUBLIC_IP}/" ~vagrant/stackrc
+sed -i "s/\${DEMO_TENANT_NAME}/${DEMO_TENANT_NAME}/" ~vagrant/stackrc
 chmod 0750 ~vagrant/stackrc
 chown vagrant:vagrant ~vagrant/stackrc
 

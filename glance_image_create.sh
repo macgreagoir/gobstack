@@ -8,7 +8,7 @@ if [[ -z `ip addr | grep "${CONTROLLER_PUBLIC_IP}"` ]]; then
   exit 1
 fi
 
-# let's make this rerunable
+# let's make this script rerunable
 if [[ -n `glance image-list | awk '/\ CirrOS/ {print $2}'` ]]; then
   echo "You've already done this:"
   glance image-list
@@ -31,7 +31,7 @@ glance image-create \
 glance image-list
 
 CIRROS_IMAGE_ID=`glance image-list | awk '/\ CirrOS/ {print $2}'`
-DEMO_TENANT_ID=`keystone tenant-list | awk '/\ demo\ / {print $2}'`
+DEMO_TENANT_ID=`keystone tenant-list | awk "/\ ${DEMON_TENANT_NAME}\ / {print \\$2}"`
 glance member-create --can-share $CIRROS_IMAGE_ID $DEMO_TENANT_ID
 
 glance member-list --tenant-id $DEMO_TENANT_ID

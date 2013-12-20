@@ -14,13 +14,20 @@ MYSQL_KEYSTONE_PASS=openstack
 MYSQL_GLANCE_PASS=openstack
 MYSQL_NOVA_PASS=openstack
 
+# DEMO meaning our example tenant, and non-admin user
+# These are used throughout, so don't change them after bootstrapping
+DEMO_TENANT_NAME=demo
+DEMO_TENANT_DESC="Demo Tenant"
+DEMO_USERNAME=demo
+DEMO_PASSWORD=openstack
+
+# standard env vars used by openstack cli tools
 export OS_SERVICE_TOKEN=ADMIN
 export OS_SERVICE_ENDPOINT=http://${CONTROLLER_PUBLIC_IP}:35357/v2.0
 
-export OS_TENANT_NAME=demo
+export OS_TENANT_NAME=${DEMO_TENANT_NAME}
 export OS_USERNAME=admin
 export OS_PASSWORD=openstack
 export OS_AUTH_URL=http://${CONTROLLER_PUBLIC_IP}:5000/v2.0
 export OS_NO_CACHE=1
 
-echo "Using controller at ${CONTROLLER_PUBLIC_IP} on ${PUBLIC_INTERFACE}"
