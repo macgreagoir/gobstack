@@ -129,6 +129,9 @@ SCONF
 fi
 
 ## now we need /etc/swift{account,container,object}-server/{1..4}.conf
+# rm the standard single conf file per service
+rm -f /etc/swift/{account,container,object}-server.conf
+
 for i in {1..4}; do
   cat > /etc/swift/account-server/${i}.conf <<AST
 [DEFAULT]

@@ -39,6 +39,19 @@ glance-manage db_sync
 # service account set in keystone_install.sh
 #
 
+# use swift for storage
+# segment files > 1GB in 100MB chunks
+sed -i \
+  -e 's/^default_store.*/default_store = swift/' \
+  -e "s|^swift_store_auth_address.*|swift_store_auth_address = ${OS_AUTH_URL}|" \
+  -e 's/^swift_store_user.*/swift_store_user = service:swift/' \
+  -e 's/^swift_store_key.*/swift_store_key = swift/' \
+  -e 's/^swift_store_container.*/swift_store_container = glance/' \
+  -e 's/^swift_store_create_container_on_put.*/swift_store_create_container_on_put = True/' \
+  -e 's/^swift_store_large_object_size.*/swift_store_large_object_size = 1024/' \
+  -e 's/^swift_store_large_object_chunk_size.*/swift_store_large_object_chunk_size = 100/' \
+  /etc/glance/glance-api.conf
+
 # rm the filter:authtoken block and replace
 sed -i '/\[filter\:authtoken\]/,/^$/d' /etc/glance/glance-{api,registry}-paste.ini
 

@@ -7,9 +7,9 @@ Scripted openstack installation using Vagrant
 
 ######Requirements
 
-* GNU/Linux host
+* GNU/Linux host (OS X should be OK too)
 * Virtualbox
-* Vagrant
+* Vagrant (1.1+)
 
 ***
 
@@ -25,11 +25,13 @@ Running the script `./bootstrap.sh` will do this:
     vagrant@controller0:~$ sudo /vagrant/installers/keystone.sh
     vagrant@controller0:~$ sudo /vagrant/installers/glance.sh
     vagrant@controller0:~$ sudo /vagrant/installers/nova_controller.sh
-    vagrant@controller0:~$ sudo /vagrant/services/image_create.sh
     ``` 
 
 0. Install swift on the storage node:
     `you@host:~$ vagrant ssh storage0 -c "sudo /vagrant/installers/swift.sh"`
+
+0. Create an image, stored in swift, from the controller node:
+    `you@host:~$ vagrant ssh controller0 -c "sudo /vagrant/services/image_create.sh"`
 
 0. Install nova on the compute nodes:
     `you@host:~$ for i in 0 1; do vagrant ssh compute$i -c "sudo /vagrant/installers/nova_compute.sh"; done`

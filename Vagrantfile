@@ -40,7 +40,7 @@ Vagrant.configure("2") do |config|
           end
           if node_type == "storage"
             vbox.customize ["createhd", "--filename", ".vagrant/#{hostname}_disk2.vdi", 
-              "--size", 2048*1024]
+              "--size", 43*1024]
             vbox.customize ["storageattach", :id, "--storagectl", 
               "SATA Controller", "--port", 1, "--device", 0, "--type", "hdd", 
               "--medium", ".vagrant/#{hostname}_disk2.vdi"]
