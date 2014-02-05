@@ -4,6 +4,7 @@
 # based on Vagrantfile net config
 CONTROLLER_PUBLIC_IP=172.20.0.100
 STORAGE_PUBLIC_IP=172.20.0.150
+STORAGE_PRIVATE_IP=10.20.0.150
 PUBLIC_INTERFACE=`/sbin/ifconfig | awk '/172\.20\.0/ {print x}{x = $1}' | head -1`
 PRIVATE_INTERFACE=`/sbin/ifconfig | awk '/10\.20\.0/ {print x}{x = $1}' | head -1`
 NOVA_FIXED_RANGE="10.30.0.0/24"
@@ -13,6 +14,7 @@ MYSQL_ROOT_PASS=openstack
 MYSQL_KEYSTONE_PASS=openstack
 MYSQL_GLANCE_PASS=openstack
 MYSQL_NOVA_PASS=openstack
+MYSQL_CINDER_PASS=openstack
 
 # DEMO meaning our example tenant, and non-admin user
 # These are used throughout, so don't change them after bootstrapping

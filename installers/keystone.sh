@@ -146,7 +146,7 @@ keystone endpoint-create --region RegionOne \
   --internalurl $KEYSTONE_INTERNAL_URL
 
 CINDER_SERVICE_ID=`keystone service-list | awk '/\ volume\ / {print $2}'`
-CINDER_PUBLIC_URL="http://${CONTROLLER_PUBLIC_IP}:8776/v1/%(tenant_id)s"
+CINDER_PUBLIC_URL="http://${STORAGE_PUBLIC_IP}:8776/v1/%(tenant_id)s"
 CINDER_ADMIN_URL=$CINDER_PUBLIC_URL
 CINDER_INTERNAL_URL=$CINDER_PUBLIC_URL
 keystone endpoint-create --region RegionOne \

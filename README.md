@@ -30,6 +30,9 @@ Running the script `./bootstrap.sh` will do this:
 0. Install swift on the storage node:
     `you@host:~$ vagrant ssh storage0 -c "sudo /vagrant/installers/swift.sh"`
 
+0. Install cinder on the storage node:
+    `you@host:~$ vagrant ssh storage0 -c "sudo /vagrant/installers/cinder.sh"`
+
 0. Create an image, stored in swift, from the controller node:
     `you@host:~$ vagrant ssh controller0 -c "sudo /vagrant/services/image_create.sh"`
 

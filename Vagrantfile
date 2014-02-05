@@ -39,11 +39,18 @@ Vagrant.configure("2") do |config|
             vbox.customize ["modifyvm", :id, "--cpus", 1]
           end
           if node_type == "storage"
+            # sdb for swift
             vbox.customize ["createhd", "--filename", ".vagrant/#{hostname}_disk2.vdi", 
               "--size", 43*1024]
             vbox.customize ["storageattach", :id, "--storagectl", 
               "SATA Controller", "--port", 1, "--device", 0, "--type", "hdd", 
               "--medium", ".vagrant/#{hostname}_disk2.vdi"]
+            # sdc for cinder
+            vbox.customize ["createhd", "--filename", ".vagrant/#{hostname}_disk3.vdi", 
+              "--size", 10*1024]
+            vbox.customize ["storageattach", :id, "--storagectl", 
+              "SATA Controller", "--port", 2, "--device", 0, "--type", "hdd", 
+              "--medium", ".vagrant/#{hostname}_disk3.vdi"]
           end
         end
         node.vm.provision :shell, :inline => repo_update

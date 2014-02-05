@@ -57,6 +57,7 @@ public_interface=${PUBLIC_INTERFACE}
 
 # object storage
 iscsi_helper=tgtadm
+iscsi_ip_address = ${STORAGE_PRIVATE_IP}
 
 # rabbitmq
 rabbit_host=${CONTROLLER_PUBLIC_IP}
@@ -65,6 +66,8 @@ rabbit_host=${CONTROLLER_PUBLIC_IP}
 scheduler_default_filter=AllHostsFilter
 
 # volumes
+volume_api_class=nova.volume.cinder.API
+volume_driver=nova.volume.driver.ISCSIDriver
 volumes_path=/var/lib/nova/volumes
 
 # wsgi

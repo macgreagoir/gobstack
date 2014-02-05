@@ -31,7 +31,7 @@ glance image-create \
 glance image-list
 
 CIRROS_IMAGE_ID=`glance image-list | awk '/\ CirrOS/ {print $2}'`
-DEMO_TENANT_ID=`keystone tenant-list | awk "/\ ${DEMON_TENANT_NAME}\ / {print \\$2}"`
+DEMO_TENANT_ID=`keystone tenant-list | awk "/\ ${DEMO_TENANT_NAME}\ / {print \\$2}"`
 glance member-create --can-share $CIRROS_IMAGE_ID $DEMO_TENANT_ID
 
 glance member-list --tenant-id $DEMO_TENANT_ID

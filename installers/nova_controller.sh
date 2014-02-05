@@ -15,6 +15,7 @@ if [[ -z `ip addr | grep "${CONTROLLER_PUBLIC_IP}"` ]]; then
   exit 1
 fi
 
+# nova requirements, and cinder client too
 apt-get install -y \
   rabbitmq-server \
   dnsmasq \
@@ -23,7 +24,8 @@ apt-get install -y \
   nova-conductor \
   nova-scheduler \
   nova-objectstore \
-  nova-cert
+  nova-cert \
+  python-cinderclient
 
 mysql -uroot -p${MYSQL_ROOT_PASS} -e \
   "CREATE DATABASE nova;"
@@ -50,7 +52,7 @@ nova-manage floating create --ip_range=${NOVA_FLOATING_RANGE}
 source ${BASH_SOURCE%/*}/../files/nova_api_paste_ini.sh
 
 # restart 'em all
-source ${BASH_SOURCE%/*}/../tools/nova_restart.sh
+source ${BASH_SOURCE%/*}/../tools/daemons_restart.sh nova
 
 nova net-list
 nova-manage service list
@@ -68,10 +70,6 @@ chmod 0600 ~vagrant/.ssh/vagrant.pem
 chown vagrant:vagrant ~vagrant/.ssh/vagrant.pem
 nova keypair-list
 
-# this is handy
-grep export ${BASH_SOURCE%/*}/../defaults.sh > ~vagrant/stackrc
-sed -i "s/\${CONTROLLER_PUBLIC_IP}/${CONTROLLER_PUBLIC_IP}/" ~vagrant/stackrc
-sed -i "s/\${DEMO_TENANT_NAME}/${DEMO_TENANT_NAME}/" ~vagrant/stackrc
-chmod 0750 ~vagrant/stackrc
-chown vagrant:vagrant ~vagrant/stackrc
+# get a stackrc
+source ${BASH_SOURCE%/*}/../tools/stackrc_write.sh
 

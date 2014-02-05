@@ -24,5 +24,5 @@ source ${BASH_SOURCE%/*}/../files/nova_conf.sh
 source ${BASH_SOURCE%/*}/../files/nova_api_paste_ini.sh
 
 # restart 'em all
-source ${BASH_SOURCE%/*}/../tools/nova_restart.sh
+source ${BASH_SOURCE%/*}/../tools/daemons_restart.sh nova
 
