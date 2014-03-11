@@ -20,7 +20,7 @@ while [ -z "$INSTANCE_IP" ] &&  (( count-- > 0 )); do
   echo "I'll try $(( count + 1 )) more times..."
   sleep 5
   INSTANCE_IP=`nova show $INSTANCE_ID \
-    | awk '/private network.*172/ {print}' | sed 's|.*\(172\.20\.10\.[[:digit:]+]\).*|\1|'`
+    | awk '/private network.*172/ {print}' | sed 's|.*\(172\.16\.10\.[[:digit:]+]\).*|\1|'`
 done
 
 

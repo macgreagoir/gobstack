@@ -24,7 +24,7 @@ Vagrant.configure("2") do |config|
 
       config.vm.define "#{hostname}" do |node|
         node.vm.hostname = "#{hostname}.local"
-        node.vm.network :private_network, :ip => "172.20.0.#{ip_addr+i}", 
+        node.vm.network :private_network, :ip => "172.16.0.#{ip_addr+i}", 
           :netmask => "255.255.0.0"
         node.vm.network :private_network, :ip => "10.20.0.#{ip_addr+i}", 
           :netmask => "255.255.0.0"
