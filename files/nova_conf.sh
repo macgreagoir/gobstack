@@ -44,16 +44,17 @@ logdir=/var/log/nova
 verbose=True
 
 # network
-auto_assign_floating_ip=True
-dhcpbridge=/usr/bin/nova-dhcpbridge
-dhcpbridge_flagfile=/etc/nova/nova.conf
-fixed_range=${NOVA_FIXED_RANGE}
-flat_interface=${PRIVATE_INTERFACE}
-flat_network_bridge=br100
-force_dhcp_release=True
-multi_host=true
-network_manager=nova.network.manager.FlatDHCPManager
-public_interface=${PUBLIC_INTERFACE}
+neutron_metadata_proxy_shared_secret=${NEUTRON_METADATA_PASS}
+service_neutron_metadata_proxy = true
+network_api_class=nova.network.neutronv2.api.API
+neutron_url=http://${CONTROLLER_PUBLIC_IP}:9696
+neutron_auth_strategy=keystone
+neutron_admin_tenant_name=service
+neutron_admin_username=neutron
+neutron_admin_password=neutron
+neutron_admin_auth_url=http://${CONTROLLER_PUBLIC_IP}:35357/v2.0
+linuxnet_interface_driver = nova.network.linux_net.LinuxOVSInterfaceDriver
+firewall_driver=nova.virt.firewall.NoopFirewallDriver
 
 # object storage
 iscsi_helper=tgtadm

@@ -83,8 +83,11 @@ lock_path = /var/lock/cinder
 volumes_dir = /var/lib/cinder/volumes
 
 # Add these when not using the defaults.
+# rpc_backend = cinder.openstack.common.rpc.impl_kombu
 rabbit_host = ${CONTROLLER_PUBLIC_IP}
 rabbit_port = 5672
+# rabbit_userid = 
+# rabbit_pasword =
 
 CCONF
 

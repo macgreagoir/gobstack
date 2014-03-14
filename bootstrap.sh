@@ -14,8 +14,9 @@ done
 vagrant halt
 vagrant destroy -f
 vagrant up
-controller_install='for s in keystone glance nova_controller; do sudo /vagrant/installers/${s}.sh; done'
+controller_install='for s in keystone glance neutron_controller nova_controller; do sudo /vagrant/installers/${s}.sh; done'
 vagrant ssh controller0 -c "$controller_install"
+vagrant ssh network0 -c 'sudo /vagrant/installers/neutron_network.sh; /vagrant/services/networks_create.sh'
 vagrant ssh storage0 -c 'for s in swift cinder; do sudo /vagrant/installers/${s}.sh; done'
 vagrant ssh controller0 -c 'sudo /vagrant/services/image_create.sh'
 for i in 0 1; do vagrant ssh compute$i -c 'sudo /vagrant/installers/nova_compute.sh'; done

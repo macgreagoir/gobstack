@@ -7,20 +7,24 @@ source ${BASH_SOURCE%/*}/../defaults.sh
 ## boot a new instance as the non-admin user
 # we assume an image and key from our glance and nova installer scripts
 IMAGE_ID=`nova image-list | awk '/\ CirrOS\ / {print $2}'`
+NET_ID=`neutron net-list | awk "/${DEMO_TENANT_NAME}-net/ {print \\$2}"`
 # we'll name the instance for the non-admin user
 RAND=`< /dev/urandom tr -dc a-z0-9 | head -c3`
 INSTANCE_NAME="${OS_TENANT_NAME}_${RAND}"
-INSTANCE_ID=`OS_USERNAME=$OS_TENANT_NAME nova boot ${INSTANCE_NAME} --image ${IMAGE_ID} --flavor 1 --key_name vagrant \
+INSTANCE_ID=`OS_USERNAME=$OS_TENANT_NAME nova boot ${INSTANCE_NAME} \
+  --image ${IMAGE_ID} --flavor 1 --key_name vagrant \
+  --nic net-id=${NET_ID} \
   | awk '$2 == "id" {print $4}'`
 
 # grab its IP addr
+# TODO get rid of the hard-coded addr in the sed regex
 count=3
 INSTANCE_IP=''
 while [ -z "$INSTANCE_IP" ] &&  (( count-- > 0 )); do
   echo "I'll try $(( count + 1 )) more times..."
   sleep 5
   INSTANCE_IP=`nova show $INSTANCE_ID \
-    | awk '/private network.*172/ {print}' | sed 's|.*\(172\.16\.10\.[[:digit:]+]\).*|\1|'`
+    | awk '/\ network.*10\.0\./ {print}' | sed 's|.*\(10\.0\.1\.[[:digit:]+]\).*|\1|'`
 done
 
 

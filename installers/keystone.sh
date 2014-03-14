@@ -58,6 +58,8 @@ sed -i "s|^#token_format.*|token_format = UUID|" \
 service keystone restart
 keystone-manage db_sync
 
+# TODO Maybe all databases should be created here, as all endpoints are below
+
 ## now for some tenants, roles and users
 # as assigned in deafults.sh
 keystone tenant-create --name admin --description "Admin Tenant" --enabled true
@@ -98,22 +100,23 @@ keystone user-list
 
 
 ## now the endpoints
-keystone service-create --name nova --type compute --description "Nova Compute Service"
-keystone service-create --name ec2 --type ec2 --description "EC2 Service"
+keystone service-create --name cinder --type volume --description "OpenStack Block Storage Service"
+keystone service-create --name ec2 --type ec2 --description "OpenStack EC2 Compatibility Layer"
 keystone service-create --name glance --type image --description "OpenStack Image Service"
 keystone service-create --name keystone --type identity --description "OpenStack Identity Service"
-keystone service-create --name volume --type volume --description "Volume Service"
-keystone service-create --name swift --type object-store --description "OpenStack Storage Service"
+keystone service-create --name neutron --type network --description "OpenStack Network Service"
+keystone service-create --name nova --type compute --description "OpenStack Compute Service"
+keystone service-create --name swift --type object-store --description "OpenStack Object Storage Service"
 
-NOVA_SERVICE_ID=`keystone service-list | awk '/\ nova\ / {print $2}'`
-NOVA_PUBLIC_URL="http://${CONTROLLER_PUBLIC_IP}:8774/v2/%(tenant_id)s"
-NOVA_ADMIN_URL=$NOVA_PUBLIC_URL
-NOVA_INTERNAL_URL=$NOVA_PUBLIC_URL
+CINDER_SERVICE_ID=`keystone service-list | awk '/\ cinder\ / {print $2}'`
+CINDER_PUBLIC_URL="http://${STORAGE_PUBLIC_IP}:8776/v1/%(tenant_id)s"
+CINDER_ADMIN_URL=$CINDER_PUBLIC_URL
+CINDER_INTERNAL_URL=$CINDER_PUBLIC_URL
 keystone endpoint-create --region RegionOne \
-  --service_id $NOVA_SERVICE_ID \
-  --publicurl $NOVA_PUBLIC_URL \
-  --adminurl $NOVA_ADMIN_URL \
-  --internalurl $NOVA_INTERNAL_URL
+  --service_id $CINDER_SERVICE_ID \
+  --publicurl $CINDER_PUBLIC_URL \
+  --adminurl $CINDER_ADMIN_URL \
+  --internalurl $CINDER_INTERNAL_URL
 
 EC2_SERVICE_ID=`keystone service-list | awk '/\ ec2\ / {print $2}'`
 EC2_PUBLIC_URL="http://${CONTROLLER_PUBLIC_IP}:8773/services/Cloud"
@@ -145,15 +148,25 @@ keystone endpoint-create --region RegionOne \
   --adminurl $KEYSTONE_ADMIN_URL \
   --internalurl $KEYSTONE_INTERNAL_URL
 
-CINDER_SERVICE_ID=`keystone service-list | awk '/\ volume\ / {print $2}'`
-CINDER_PUBLIC_URL="http://${STORAGE_PUBLIC_IP}:8776/v1/%(tenant_id)s"
-CINDER_ADMIN_URL=$CINDER_PUBLIC_URL
-CINDER_INTERNAL_URL=$CINDER_PUBLIC_URL
+NOVA_SERVICE_ID=`keystone service-list | awk '/\ nova\ / {print $2}'`
+NOVA_PUBLIC_URL="http://${CONTROLLER_PUBLIC_IP}:8774/v2/%(tenant_id)s"
+NOVA_ADMIN_URL=$NOVA_PUBLIC_URL
+NOVA_INTERNAL_URL=$NOVA_PUBLIC_URL
 keystone endpoint-create --region RegionOne \
-  --service_id $CINDER_SERVICE_ID \
-  --publicurl $CINDER_PUBLIC_URL \
-  --adminurl $CINDER_ADMIN_URL \
-  --internalurl $CINDER_INTERNAL_URL
+  --service_id $NOVA_SERVICE_ID \
+  --publicurl $NOVA_PUBLIC_URL \
+  --adminurl $NOVA_ADMIN_URL \
+  --internalurl $NOVA_INTERNAL_URL
+
+NEUTRON_SERVICE_ID=`keystone service-list | awk '/\ neutron\ / {print $2}'`
+NEUTRON_PUBLIC_URL="http://${NETWORK_PUBLIC_IP}:9696"
+NEUTRON_ADMIN_URL=$NEUTRON_PUBLIC_URL
+NEUTRON_INTERNAL_URL=$NEUTRON_PUBLIC_URL
+keystone endpoint-create --region RegionOne \
+  --service_id $NEUTRON_SERVICE_ID \
+  --publicurl $NEUTRON_PUBLIC_URL \
+  --adminurl $NEUTRON_ADMIN_URL \
+  --internalurl $NEUTRON_INTERNAL_URL
 
 SWIFT_SERVICE_ID=`keystone service-list | awk '/\ swift\ / {print $2}'`
 SWIFT_PUBLIC_URL="http://${STORAGE_PUBLIC_IP}:8080/v1/AUTH_%(tenant_id)s"
@@ -172,20 +185,26 @@ keystone service-list
 keystone tenant-create --name service --description "Service Tenant" --enabled true
 SERVICE_TENANT_ID=`keystone tenant-list | awk '/\ service\ / {print $2}'`
 
-keystone user-create --name nova --pass nova --tenant_id $SERVICE_TENANT_ID --email nova@localhost --enabled true
+keystone user-create --name cinder --pass cinder --tenant_id $SERVICE_TENANT_ID --email cinder@localhost --enabled true
+keystone user-create --name ec2 --pass ec2 --tenant_id $SERVICE_TENANT_ID --email ec2@localhost --enabled true
 keystone user-create --name glance --pass glance --tenant_id $SERVICE_TENANT_ID --email glance@localhost --enabled true
 keystone user-create --name keystone --pass keystone --tenant_id $SERVICE_TENANT_ID --email keystone@localhost --enabled true
-keystone user-create --name cinder --pass cinder --tenant_id $SERVICE_TENANT_ID --email cinder@localhost --enabled true
+keystone user-create --name neutron --pass neutron --tenant_id $SERVICE_TENANT_ID --email neutron@localhost --enabled true
+keystone user-create --name nova --pass nova --tenant_id $SERVICE_TENANT_ID --email nova@localhost --enabled true
 keystone user-create --name swift --pass swift --tenant_id $SERVICE_TENANT_ID --email swift@localhost --enabled true
 
-NOVA_USER_ID=`keystone user-list | awk '/\ nova\ / {print $2}'`
-keystone user-role-add --user $NOVA_USER_ID --role $ADMIN_ROLE_ID --tenant_id $SERVICE_TENANT_ID
+CINDER_USER_ID=`keystone user-list | awk '/\ cinder\ / {print $2}'`
+keystone user-role-add --user $CINDER_USER_ID --role $ADMIN_ROLE_ID --tenant_id $SERVICE_TENANT_ID
+EC2_USER_ID=`keystone user-list | awk '/\ ec2\ / {print $2}'`
+keystone user-role-add --user $EC2_USER_ID --role $ADMIN_ROLE_ID --tenant_id $SERVICE_TENANT_ID
 GLANCE_USER_ID=`keystone user-list | awk '/\ glance\ / {print $2}'`
 keystone user-role-add --user $GLANCE_USER_ID --role $ADMIN_ROLE_ID --tenant_id $SERVICE_TENANT_ID
 KEYSTONE_USER_ID=`keystone user-list | awk '/\ keystone\ / {print $2}'`
 keystone user-role-add --user $KEYSTONE_USER_ID --role $ADMIN_ROLE_ID --tenant_id $SERVICE_TENANT_ID
-CINDER_USER_ID=`keystone user-list | awk '/\ cinder\ / {print $2}'`
-keystone user-role-add --user $CINDER_USER_ID --role $ADMIN_ROLE_ID --tenant_id $SERVICE_TENANT_ID
+NEUTRON_USER_ID=`keystone user-list | awk '/\ neutron\ / {print $2}'`
+keystone user-role-add --user $NEUTRON_USER_ID --role $ADMIN_ROLE_ID --tenant_id $SERVICE_TENANT_ID
+NOVA_USER_ID=`keystone user-list | awk '/\ nova\ / {print $2}'`
+keystone user-role-add --user $NOVA_USER_ID --role $ADMIN_ROLE_ID --tenant_id $SERVICE_TENANT_ID
 SWIFT_USER_ID=`keystone user-list | awk '/\ swift\ / {print $2}'`
 keystone user-role-add --user $SWIFT_USER_ID --role $ADMIN_ROLE_ID --tenant_id $SERVICE_TENANT_ID
 

@@ -24,8 +24,13 @@ Running the script `./bootstrap.sh` will do this:
     ``` 
     vagrant@controller0:~$ sudo /vagrant/installers/keystone.sh
     vagrant@controller0:~$ sudo /vagrant/installers/glance.sh
+    vagrant@controller0:~$ sudo /vagrant/installers/neutron_controller.sh
     vagrant@controller0:~$ sudo /vagrant/installers/nova_controller.sh
     ``` 
+
+0. Install neutron on the network node:
+    `you@host:~$ vagrant ssh network0 -c "sudo /vagrant/installers/neutron_network.sh"`
+    `you@host:~$ vagrant ssh network0 -c "/vagrant/services/networks_create.sh"`
 
 0. Install swift on the storage node:
     `you@host:~$ vagrant ssh storage0 -c "sudo /vagrant/installers/swift.sh"`

@@ -25,6 +25,7 @@ apt-get install -y \
   nova-scheduler \
   nova-objectstore \
   nova-cert \
+  python-novaclient \
   python-cinderclient
 
 mysql -uroot -p${MYSQL_ROOT_PASS} -e \
@@ -40,29 +41,13 @@ source ${BASH_SOURCE%/*}/../files/nova_conf.sh
 # populate the db
 nova-manage db sync
 
-# create the network
-nova-manage network create private \
-  --fixed_range_v4=${NOVA_FIXED_RANGE} \
-  --network_size=64 \
-  --bridge=br100 \
-  --bridge_interface=${PRIVATE_INTERFACE}
-nova-manage floating create --ip_range=${NOVA_FLOATING_RANGE}
-
 # write out nova api-paste.ini for keystone
 source ${BASH_SOURCE%/*}/../files/nova_api_paste_ini.sh
 
 # restart 'em all
 source ${BASH_SOURCE%/*}/../tools/daemons_restart.sh nova
 
-nova net-list
 nova-manage service list
-
-# we should have a 'default' security group
-# add SSH access and ping
-nova secgroup-add-rule default tcp 22 22 0.0.0.0/0
-nova secgroup-add-rule default icmp -1 -1 0.0.0.0/0
-nova secgroup-list
-nova secgroup-list-rules default
 
 # create a keypair for the vagrant user as the non-admin user
 OS_USERNAME=$DEMO_USERNAME nova keypair-add vagrant > ~vagrant/.ssh/vagrant.pem

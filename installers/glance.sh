@@ -14,7 +14,7 @@ if [[ -z `ip addr | grep "${CONTROLLER_PUBLIC_IP}"` ]]; then
 fi
 
 ## glance install
-apt-get install -y glance
+apt-get install -y glance python-glanceclient
 
 mysql -uroot -p${MYSQL_ROOT_PASS} -e \
   "CREATE DATABASE glance;"
