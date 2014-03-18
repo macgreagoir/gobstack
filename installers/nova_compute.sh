@@ -34,7 +34,8 @@ source ${BASH_SOURCE%/*}/../files/nova_conf.sh
 # write out nova api-paste.ini for keystone
 source ${BASH_SOURCE%/*}/../files/nova_api_paste_ini.sh
 
-# write out the OVS neutron plugin ini
+# write out the neutron confs
+source ${BASH_SOURCE%/*}/../files/neutron_conf.sh
 source ${BASH_SOURCE%/*}/../files/ovs_neutron_plugin_ini.sh
 
 # restart 'em all

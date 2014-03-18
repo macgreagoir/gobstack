@@ -49,10 +49,12 @@ if [ -n "$INSTANCE_IP" ]; then
 
   echo "Waiting for ${INSTANCE_NAME} to boot..."
   sleep 20
-  ping -c 9 ${INSTANCE_IP}
   echo "Whistle a happy tune and give ssh a chance to start on ${INSTANCE_IP}..."
-  # echo "ssh cirros@${INSTANCE_IP}' with passwd 'cubswin:)'"
-  echo "...then \"ssh -o 'IdentityFile ~/.ssh/vagrant.pem' cirros@${INSTANCE_IP}\""
+  echo
+  echo "From the network node, 'ip netns list | grep dhcp' to find the namespace id, then"
+  echo "'ip netns exec <namespace id> ssh cirros@${INSTANCE_IP}' with passwd 'cubswin:)'"
+  # echo "...then \"ssh -o 'IdentityFile ~/.ssh/vagrant.pem' cirros@${INSTANCE_IP}\""
+  echo
 else
   echo "No IP address was found for instance ${INSTANCE_NAME} (${INSTANCE_ID})"
 fi

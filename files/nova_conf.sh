@@ -55,6 +55,7 @@ neutron_admin_password=neutron
 neutron_admin_auth_url=http://${CONTROLLER_PUBLIC_IP}:35357/v2.0
 linuxnet_interface_driver = nova.network.linux_net.LinuxOVSInterfaceDriver
 firewall_driver=nova.virt.firewall.NoopFirewallDriver
+security_group_api=nova
 
 # object storage
 iscsi_helper=tgtadm
