@@ -159,7 +159,7 @@ keystone endpoint-create --region RegionOne \
   --internalurl $NOVA_INTERNAL_URL
 
 NEUTRON_SERVICE_ID=`keystone service-list | awk '/\ neutron\ / {print $2}'`
-NEUTRON_PUBLIC_URL="http://${NETWORK_PUBLIC_IP}:9696"
+NEUTRON_PUBLIC_URL="http://${CONTROLLER_PUBLIC_IP}:9696"
 NEUTRON_ADMIN_URL=$NEUTRON_PUBLIC_URL
 NEUTRON_INTERNAL_URL=$NEUTRON_PUBLIC_URL
 keystone endpoint-create --region RegionOne \

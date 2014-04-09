@@ -1,9 +1,9 @@
 ## model an OpenStack system using Ubuntu precise64 box
 
-# use havana and uk mirrors
+# use havana
 repo_update = "echo 'deb http://ubuntu-cloud.archive.canonical.com/ubuntu "
 repo_update << "precise-proposed/havana main' > /etc/apt/sources.list.d/havana.list; "
-repo_update << "sed -i 's|/us\.|/ie\.|' /etc/apt/sources.list; "
+repo_update << "sed -i 's|/us\.|/|' /etc/apt/sources.list; "
 repo_update << "apt-get update; apt-get install -y ubuntu-cloud-keyring; "
 repo_update << "apt-get update"
 
