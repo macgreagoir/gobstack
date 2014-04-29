@@ -18,7 +18,7 @@ fi
 
 # install neutron components
 apt-get -y install \
-  neutron-server neutron-plugin-openvswitch
+  neutron-server neutron-plugin-ml2
 
 
 # create the database
@@ -30,10 +30,22 @@ mysql -h${CONTROLLER_PUBLIC_IP} -uroot -p${MYSQL_ROOT_PASS} -e \
   "GRANT ALL ON neutron.* TO 'neutron'@'localhost' IDENTIFIED BY '${MYSQL_NEUTRON_PASS}';"
 
 
-# conf files common to controller and compute nodes too
+# conf files common to controller and compute nodes
 source ${BASH_SOURCE%/*}/../files/neutron_conf.sh
-source ${BASH_SOURCE%/*}/../files/neutron_api_paste_ini.sh
-source ${BASH_SOURCE%/*}/../files/ovs_neutron_plugin_ini.sh
 
+# rm the service_provider block and replace
+sed -i '/\[service_providers\]/,/^$/d' /etc/neutron/neutron.conf
+cat >> /etc/neutron/neutron.conf <<SERV
+
+[service_providers]
+service_provider=LOADBALANCER:Haproxy:neutron.services.loadbalancer.drivers.haproxy.plugin_driver.HaproxyOnHostPluginDriver:default
+service_provider=VPN:openswan:neutron.services.vpn.service_drivers.ipsec.IPsecVPNDriver:default
+
+SERV
+
+source ${BASH_SOURCE%/*}/../files/ml2_conf_ini.sh
+
+
+# restart 'em all
 source ${BASH_SOURCE%/*}/../tools/daemons_restart.sh neutron
 

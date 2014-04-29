@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 ## Install and configure the keystone service
 
 if [[ $EUID -ne 0 ]]; then
@@ -8,40 +8,14 @@ fi
 
 source ${BASH_SOURCE%/*}/../defaults.sh
 
-
-## prep work to get mysql installed and in shape
-
+# this to check we are on the controller
 if [[ -z `ip addr | grep "${CONTROLLER_PUBLIC_IP}"` ]]; then
   echo "This script expects an interface with ${CONTROLLER_PUBLIC_IP}" 1>&2
   exit 1
 fi
 
-# pre-seed debconf for non-interactive install
-echo "mysql-server-5.5 mysql-server/root_password password ${MYSQL_ROOT_PASS}
-mysql-server-5.5 mysql-server/root_password seen true
-mysql-server-5.5 mysql-server/root_password_again password ${MYSQL_ROOT_PASS}
-mysql-server-5.5 mysql-server/root_password_again seen true
-"  | debconf-set-selections
 
-export DEBIAN_FRONTEND=noninteractive
-apt-get install -y mysql-server python-mysqldb
-sed -i "s/^bind\-address.*/bind\-address = ${CONTROLLER_PUBLIC_IP}/" \
-  /etc/mysql/my.cnf
-service mysql restart
-
-mysql -uroot -p${MYSQL_ROOT_PASS} -e \
-  "GRANT ALL ON *.* TO root@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASS}' WITH GRANT OPTION;"
-mysql -uroot -p${MYSQL_ROOT_PASS} -e \
-  "GRANT ALL ON *.* TO root@'${CONTROLLER_PUBLIC_IP}' IDENTIFIED BY '${MYSQL_ROOT_PASS}' WITH GRANT OPTION;"
-mysql -uroot -p${MYSQL_ROOT_PASS} -e \
-  "GRANT ALL ON *.* TO root@'%' IDENTIFIED BY '${MYSQL_ROOT_PASS}' WITH GRANT OPTION;"
-
-mysqladmin -uroot -p${MYSQL_ROOT_PASS} flush-privileges
-mysqladmin -uroot -p${MYSQL_ROOT_PASS} status
-
-## now keystone itself
-
-apt-get install -y keystone python-keyring python-keystoneclient
+apt-get install -y keystone python-keyring
 
 mysql -uroot -p${MYSQL_ROOT_PASS} -e \
   "CREATE DATABASE keystone;"
@@ -50,15 +24,34 @@ mysql -uroot -p${MYSQL_ROOT_PASS} -e \
 
 sed -i "s|^connection.*|connection = mysql://keystone:${MYSQL_KEYSTONE_PASS}@${CONTROLLER_PUBLIC_IP}/keystone|" \
   /etc/keystone/keystone.conf
-sed -i "s|^# admin_token.*|admin_token = ${OS_SERVICE_TOKEN}|" \
+sed -i "s|^#\s*admin_token.*|admin_token = ${OS_SERVICE_TOKEN}|" \
   /etc/keystone/keystone.conf
-sed -i "s|^#token_format.*|token_format = UUID|" \
+sed -i "s|^#\s*log_dir.*|log_dir = /var/log/keystone|" \
   /etc/keystone/keystone.conf
 
 service keystone restart
-keystone-manage db_sync
 
-# TODO Maybe all databases should be created here, as all endpoints are below
+# let it start
+count=3
+while [ "`curl $OS_SERVICE_ENDPOINT 2>/dev/null | awk '/version/ {print \"started\"}'`" != "started" ] && \
+  (( count-- > 0 )); do 
+  echo "keystone starting..."
+  sleep 3
+done
+
+# populate the db
+su -s /bin/sh -c "keystone-manage db_sync" keystone
+
+# remove the default SQLite db
+rm -f /var/lib/keystone/keystone.db
+
+# cron the clean up of expired tokens
+(crontab -l 2>&1 | grep -q token_flush) || \
+echo '@hourly /usr/bin/keystone-manage token_flush >/var/log/keystone/keystone-tokenflush.log 2>&1' >> /var/spool/cron/crontabs/root
+
+
+# TODO Maybe all service databases should be created here, as all endpoints are below
+#      They are currently created in service install scripts
 
 ## now for some tenants, roles and users
 # as assigned in deafults.sh
@@ -101,6 +94,7 @@ keystone user-list
 
 ## now the endpoints
 keystone service-create --name cinder --type volume --description "OpenStack Block Storage Service"
+keystone service-create --name cinderv2 --type volumev2 --description "OpenStack Block Storage Service v2"
 keystone service-create --name ec2 --type ec2 --description "OpenStack EC2 Compatibility Layer"
 keystone service-create --name glance --type image --description "OpenStack Image Service"
 keystone service-create --name keystone --type identity --description "OpenStack Identity Service"
@@ -117,6 +111,16 @@ keystone endpoint-create --region RegionOne \
   --publicurl $CINDER_PUBLIC_URL \
   --adminurl $CINDER_ADMIN_URL \
   --internalurl $CINDER_INTERNAL_URL
+
+CINDER_V2_SERVICE_ID=`keystone service-list | awk '/\ cinderv2\ / {print $2}'`
+CINDER_V2_PUBLIC_URL="http://${STORAGE_PUBLIC_IP}:8776/v2/%(tenant_id)s"
+CINDER_V2_ADMIN_URL=$CINDER_V2_PUBLIC_URL
+CINDER_V2_INTERNAL_URL=$CINDER_V2_PUBLIC_URL
+keystone endpoint-create --region RegionOne \
+  --service_id $CINDER_V2_SERVICE_ID \
+  --publicurl $CINDER_V2_PUBLIC_URL \
+  --adminurl $CINDER_V2_ADMIN_URL \
+  --internalurl $CINDER_V2_INTERNAL_URL
 
 EC2_SERVICE_ID=`keystone service-list | awk '/\ ec2\ / {print $2}'`
 EC2_PUBLIC_URL="http://${CONTROLLER_PUBLIC_IP}:8773/services/Cloud"
@@ -209,3 +213,4 @@ SWIFT_USER_ID=`keystone user-list | awk '/\ swift\ / {print $2}'`
 keystone user-role-add --user $SWIFT_USER_ID --role $ADMIN_ROLE_ID --tenant_id $SERVICE_TENANT_ID
 
 keystone user-list
+

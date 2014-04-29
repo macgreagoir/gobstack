@@ -22,6 +22,7 @@ Running the script `./bootstrap.sh` will do this:
 0. On controller0:
 
     ``` 
+    vagrant@controller0:~$ sudo /vagrant/installers/mysql.sh
     vagrant@controller0:~$ sudo /vagrant/installers/keystone.sh
     vagrant@controller0:~$ sudo /vagrant/installers/glance.sh
     vagrant@controller0:~$ sudo /vagrant/installers/neutron_controller.sh
@@ -30,7 +31,6 @@ Running the script `./bootstrap.sh` will do this:
 
 0. Install neutron on the network node:
     `you@host:~$ vagrant ssh network0 -c "sudo /vagrant/installers/neutron_network.sh"`
-    `you@host:~$ vagrant ssh network0 -c "/vagrant/services/networks_create.sh"`
 
 0. Install swift on the storage node:
     `you@host:~$ vagrant ssh storage0 -c "sudo /vagrant/installers/swift.sh"`
@@ -40,6 +40,7 @@ Running the script `./bootstrap.sh` will do this:
 
 0. Create an image, stored in swift, from the controller node:
     `you@host:~$ vagrant ssh controller0 -c "sudo /vagrant/services/image_create.sh"`
+    `you@host:~$ vagrant ssh controller0 -c "sudo /vagrant/services/networks_create.sh"`
 
 0. Install nova on the compute nodes:
     `you@host:~$ for i in 0 1; do vagrant ssh compute$i -c "sudo /vagrant/installers/nova_compute.sh"; done`

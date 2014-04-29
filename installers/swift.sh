@@ -16,9 +16,9 @@ fi
 
 ## install swift et al, and python-keystone
 apt-get -y install \
-  curl memcached ntp parted python-webob xfsprogs \
+  memcached parted python-webob xfsprogs \
   swift swift-account swift-container swift-object swift-proxy \
-  python-keystone
+  python-keystoneclient python-swiftclient
 
 
 ## create /dev/sdb1
@@ -66,7 +66,8 @@ for i in {1..4}; do mkdir -p /srv/$i/node/sdb$i; done
 mkdir -p /etc/swift/{account-server,container-server,object-server}
 mkdir -p /var/cache/swift
 mkdir -p /var/run/swift
-chown -R swift:swift /mnt/sdb1/{1..4} /srv/{1..4} /etc/swift /var/cache/swift /var/run/swift
+mkdir -p /var/swift/recon
+chown -R swift:swift /mnt/sdb1/{1..4} /srv/{1..4} /etc/swift /var/cache/swift /var/run/swift /var/swift/recon
 
 
 ## modules for multiple rsync targets: `rsync localhost::foo60xx`
@@ -118,7 +119,7 @@ rsync rsync://pub@localhost
 
 
 ## generate a hash to use across all swift nodes in the system
-if [ ! `grep swift_hash_path_suffix /etc/swift/swift.conf 2>/dev/null` ]; then
+if [ -z "`grep swift_hash_path_suffix /etc/swift/swift.conf 2>/dev/null`" ]; then
   SWIFT_PRE=`< /dev/urandom tr -dc A-Za-z0-9_ | head -c16`
   SWIFT_SUF=`< /dev/urandom tr -dc A-Za-z0-9_ | head -c16`
   cat > /etc/swift/swift.conf <<SCONF

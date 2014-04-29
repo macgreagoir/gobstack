@@ -27,7 +27,6 @@ mysql -h${CONTROLLER_PUBLIC_IP} -uroot -p${MYSQL_ROOT_PASS} -e \
 mysql -h${CONTROLLER_PUBLIC_IP} -uroot -p${MYSQL_ROOT_PASS} -e \
   "GRANT ALL ON cinder.* TO 'cinder'@'localhost' IDENTIFIED BY '${MYSQL_CINDER_PASS}';"
 
-
 ## create /dev/sdc1
 # do we have sdc1 already?
 disks=$(fdisk /dev/sdc 2>/dev/null <<FDISK
@@ -59,17 +58,10 @@ fi
   ( pvcreate /dev/sdc1 && vgcreate cinder-volumes /dev/sdc1 )) > /dev/null 2>&1
 
 ## update the confs
-sed -i \
-  -e "s/127.0.0.1/${CONTROLLER_PUBLIC_IP}/" \
-  -e 's/%SERVICE_TENANT_NAME%/service/' \
-  -e 's/%SERVICE_USER%/cinder/' \
-  -e 's/%SERVICE_PASSWORD%/cinder/' \
-  /etc/cinder/api-paste.ini
-
 cat > /etc/cinder/cinder.conf <<CCONF
 [DEFAULT]
 rootwrap_config = /etc/cinder/rootwrap.conf
-sql_connection = mysql://cinder:${MYSQL_CINDER_PASS}@${CONTROLLER_PUBLIC_IP}/cinder
+connection = mysql://cinder:${MYSQL_CINDER_PASS}@${CONTROLLER_PUBLIC_IP}/cinder
 api_paste_config = /etc/cinder/api-paste.ini
 
 iscsi_helper = tgtadm
@@ -83,16 +75,25 @@ lock_path = /var/lock/cinder
 volumes_dir = /var/lib/cinder/volumes
 
 # Add these when not using the defaults.
-# rpc_backend = cinder.openstack.common.rpc.impl_kombu
+rpc_backend = cinder.openstack.common.rpc.impl_kombu
 rabbit_host = ${CONTROLLER_PUBLIC_IP}
 rabbit_port = 5672
-# rabbit_userid = 
-# rabbit_pasword =
+rabbit_userid = guest
+rabbit_pasword = guest
+
+[keystone_authtoken]
+auth_uri = http://${CONTROLLER_PUBLIC_IP}:5000
+auth_host = ${CONTROLLER_PUBLIC_IP}
+auth_port = 35357
+auth_protocol = http
+admin_tenant_name = service
+admin_user = cinder
+admin_password = cinder
 
 CCONF
 
 ## populate the db
-cinder-manage db sync
+su -s /bin/sh -c "cinder-manage db sync" cinder
 
 ## restart the cinder daemons
 source ${BASH_SOURCE%/*}/../tools/daemons_restart.sh cinder
