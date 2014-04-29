@@ -12,7 +12,13 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 for s in `ls /etc/init/${1}-* | cut -d '/' -f4 | cut -d '.' -f1`
-do service $s restart; done
+do
+  service $s stop
+done
+for s in `ls /etc/init/${1}-* | cut -d '/' -f4 | cut -d '.' -f1`
+do
+  service $s start
+done
 
 # compute nodes will have this
 if [ -f /etc/init/libvirt-bin.conf ]; then
