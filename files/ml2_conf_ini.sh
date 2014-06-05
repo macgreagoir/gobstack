@@ -8,12 +8,12 @@ fi
 
 source ${BASH_SOURCE%/*}/../defaults.sh
 
-if [ -z "`grep ^#openstack_demo /etc/neutron/plugins/ml2/ml2_conf.ini`" ]; then
+if [ -z "`grep ^#gobstack /etc/neutron/plugins/ml2/ml2_conf.ini`" ]; then
   cp /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugins/ml2/ml2_conf.ini.default
 fi
 
 cat > /etc/neutron/plugins/ml2/ml2_conf.ini <<ML2
-#openstack_demo
+#gobstack
 [ml2]
 type_drivers = gre
 tenant_network_types = gre

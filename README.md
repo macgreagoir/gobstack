@@ -1,7 +1,7 @@
-openstack_demo
+gobstack
 ==============
 
-Scripted openstack installation using Vagrant
+Scripted Multi-node OpenStack installation using Vagrant
 
 ***
 
@@ -30,20 +30,30 @@ Running the script `./bootstrap.sh` will do this:
     ``` 
 
 0. Install neutron on the network node:
-    `you@host:~$ vagrant ssh network0 -c "sudo /vagrant/installers/neutron_network.sh"`
+    ``` 
+    you@host:~$ vagrant ssh network0 -c "sudo /vagrant/installers/neutron_network.sh"
+    ``` 
 
 0. Install swift on the storage node:
-    `you@host:~$ vagrant ssh storage0 -c "sudo /vagrant/installers/swift.sh"`
+    ``` 
+    you@host:~$ vagrant ssh storage0 -c "sudo /vagrant/installers/swift.sh"
+    ``` 
 
 0. Install cinder on the storage node:
-    `you@host:~$ vagrant ssh storage0 -c "sudo /vagrant/installers/cinder.sh"`
+    ``` 
+    you@host:~$ vagrant ssh storage0 -c "sudo /vagrant/installers/cinder.sh"
+    ``` 
 
 0. Create an image, stored in swift, from the controller node:
-    `you@host:~$ vagrant ssh controller0 -c "sudo /vagrant/services/image_create.sh"`
-    `you@host:~$ vagrant ssh controller0 -c "sudo /vagrant/services/networks_create.sh"`
+    ```
+    you@host:~$ vagrant ssh controller0 -c "sudo /vagrant/services/image_create.sh"
+    you@host:~$ vagrant ssh controller0 -c "sudo /vagrant/services/networks_create.sh"
+    ```
 
 0. Install nova on the compute nodes:
-    `you@host:~$ for i in 0 1; do vagrant ssh compute$i -c "sudo /vagrant/installers/nova_compute.sh"; done`
+    ``` 
+    you@host:~$ for i in 0 1; do vagrant ssh compute$i -c "sudo /vagrant/installers/nova_compute.sh"; done
+    ``` 
 
 ***
 

@@ -16,12 +16,12 @@ source ${BASH_SOURCE%/*}/../defaults.sh
 
 SERVICE_TENANT_ID=`keystone tenant-list | awk '/service/ {print $2}'`
 
-if [ -z "`grep ^#openstack_demo /etc/neutron/neutron.conf`" ]; then
+if [ -z "`grep ^#gobstack /etc/neutron/neutron.conf`" ]; then
   cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.default
 fi
 
 cat > /etc/neutron/neutron.conf <<NCONF
-#openstack_demo
+#gobstack
 [DEFAULT]
 verbose = True
 state_path = /var/lib/neutron

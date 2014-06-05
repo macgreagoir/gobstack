@@ -28,15 +28,15 @@ nodes = {
 # used to build hosts file
 # TODO IP addr coding again. Maybe prefixes in a hash for single entry
 hosts_file = "sed -i '/^127\.0\.1\.1/d' /etc/hosts\n"
-hosts_file << "sed -i '/^# openstack_demo nodes/,/^# end of openstack_demo nodes/d' /etc/hosts\n"
+hosts_file << "sed -i '/^# gobstack nodes/,/^# end of gobstack nodes/d' /etc/hosts\n"
 hosts_file << "cat >> /etc/hosts <<HOSTS\n"
-hosts_file << "# openstack_demo nodes\n"
+hosts_file << "# gobstack nodes\n"
   nodes.each do |node_type, (count, ip_addr)|
     count.times do |i|
       hosts_file << "172.16.0.#{ip_addr+i} #{node_type}#{i}\n"
     end
   end
-hosts_file << "# end of openstack_demo nodes\n"
+hosts_file << "# end of gobstack nodes\n"
 hosts_file << "HOSTS\n"
 
 Vagrant.configure("2") do |config|

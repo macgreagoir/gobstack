@@ -8,12 +8,12 @@ fi
 
 source ${BASH_SOURCE%/*}/../defaults.sh
 
-if [ -z "`grep ^#openstack_demo /etc/nova/nova.conf`" ]; then
+if [ -z "`grep ^#gobstack /etc/nova/nova.conf`" ]; then
   cp /etc/nova/nova.conf /etc/nova/nova.conf.default
 fi
 
 cat > /etc/nova/nova.conf <<NOVA
-#openstack_demo
+#gobstack
 [DEFAULT]
 # api
 enabled_apis = ec2,osapi_compute,metadata
