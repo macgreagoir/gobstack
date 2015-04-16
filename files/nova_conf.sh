@@ -33,9 +33,6 @@ ec2_host = ${CONTROLLER_PUBLIC_IP}
 ec2_private_dns_show_ip = True
 keystone_ec2_url = http://${CONTROLLER_PUBLIC_IP}:5000/v2.0/ec2tokens
 
-# glance
-glance_host = ${CONTROLLER_PUBLIC_IP}
-
 # hypervisor
 connection_type = libvirt
 libvirt_type = qemu
@@ -49,19 +46,10 @@ verbose = True
 dhcpbridge_flagfile = /etc/nova/nova.conf
 dhcpbridge = /usr/bin/nova-dhcpbridge
 force_dhcp_release = True
-
-neutron_metadata_proxy_shared_secret = ${NEUTRON_METADATA_PASS}
-service_neutron_metadata_proxy = true
 network_api_class = nova.network.neutronv2.api.API
-neutron_url = http://${CONTROLLER_PUBLIC_IP}:9696
-neutron_auth_strategy = keystone
-neutron_admin_tenant_name = service
-neutron_admin_username = neutron
-neutron_admin_password = neutron
-neutron_admin_auth_url = http://${CONTROLLER_PUBLIC_IP}:35357/v2.0
+security_group_api = neutron
 linuxnet_interface_driver = nova.network.linux_net.LinuxOVSInterfaceDriver
 firewall_driver = nova.virt.firewall.NoopFirewallDriver
-security_group_api = neutron
 
 # object storage
 iscsi_helper = tgtadm
@@ -87,12 +75,23 @@ api_paste_config = /etc/nova/api-paste.ini
 connection = mysql://nova:${MYSQL_NOVA_PASS}@${CONTROLLER_PUBLIC_IP}/nova
 
 [keystone_authtoken]
-auth_uri = http://${CONTROLLER_PUBLIC_IP}:5000
-auth_host = ${CONTROLLER_PUBLIC_IP}
-auth_port = 35357
-auth_protocol = http
+auth_uri = http://${CONTROLLER_PUBLIC_IP}:5000/v2.0
+identity_uri = http://${CONTROLLER_PUBLIC_IP}:35357
 admin_tenant_name = service
 admin_user = nova
 admin_password = nova
+
+[glance]
+host = ${CONTROLLER_PUBLIC_IP}
+
+[neutron]
+url = http://${CONTROLLER_PUBLIC_IP}:9696
+auth_strategy = keystone
+admin_tenant_name = service
+admin_username = neutron
+admin_password = neutron
+admin_auth_url = http://${CONTROLLER_PUBLIC_IP}:35357/v2.0
+service_metadata_proxy = true
+metadata_proxy_shared_secret = ${NEUTRON_METADATA_PASS}
 
 NOVA

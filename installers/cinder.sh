@@ -60,6 +60,7 @@ fi
 ## update the confs
 cat > /etc/cinder/cinder.conf <<CCONF
 [DEFAULT]
+my_ip = ${STORAGE_PUBLIC_IP}
 rootwrap_config = /etc/cinder/rootwrap.conf
 connection = mysql://cinder:${MYSQL_CINDER_PASS}@${CONTROLLER_PUBLIC_IP}/cinder
 api_paste_config = /etc/cinder/api-paste.ini
@@ -75,17 +76,13 @@ lock_path = /var/lock/cinder
 volumes_dir = /var/lib/cinder/volumes
 
 # Add these when not using the defaults.
-rpc_backend = cinder.openstack.common.rpc.impl_kombu
+rpc_backend = rabbit
 rabbit_host = ${CONTROLLER_PUBLIC_IP}
-rabbit_port = 5672
-rabbit_userid = guest
 rabbit_pasword = guest
 
 [keystone_authtoken]
-auth_uri = http://${CONTROLLER_PUBLIC_IP}:5000
-auth_host = ${CONTROLLER_PUBLIC_IP}
-auth_port = 35357
-auth_protocol = http
+auth_uri = http://${CONTROLLER_PUBLIC_IP}:5000/v2.0
+identity_uri = http://${CONTROLLER_PUBLIC_IP}:35357
 admin_tenant_name = service
 admin_user = cinder
 admin_password = cinder

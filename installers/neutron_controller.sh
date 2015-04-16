@@ -45,6 +45,9 @@ SERV
 
 source ${BASH_SOURCE%/*}/../files/ml2_conf_ini.sh
 
+# populate the db
+su -s /bin/sh -c "neutron-db-manage --config-file /etc/neutron/neutron.conf \
+  --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade juno" neutron
 
 # restart 'em all
 source ${BASH_SOURCE%/*}/../tools/daemons_restart.sh neutron

@@ -275,10 +275,8 @@ set log_facility = LOG_LOCAL1
 
 [filter:authtoken]
 paste.filter_factory = keystoneclient.middleware.auth_token:filter_factory
-auth_host = ${CONTROLLER_PUBLIC_IP}
-auth_port = 35357
-auth_protocol = http
-auth_uri = http://${CONTROLLER_PUBLIC_IP}:5000
+identity_uri = http://${CONTROLLER_PUBLIC_IP}:35357
+auth_uri = http://${CONTROLLER_PUBLIC_IP}:5000/v2.0
 admin_tenant_name = service
 admin_user = swift
 admin_password = swift

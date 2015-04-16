@@ -26,6 +26,10 @@ apt-get install -y \
   nova-scheduler \
   python-novaclient
 
+# just to be sure
+rabbitmqctl change_password guest guest
+service rabbitmq-server restart
+
 mysql -uroot -p${MYSQL_ROOT_PASS} -e \
   "CREATE DATABASE nova;"
 mysql -uroot -p${MYSQL_ROOT_PASS} -e \

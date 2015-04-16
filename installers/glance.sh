@@ -24,21 +24,16 @@ mysql -uroot -p${MYSQL_ROOT_PASS} -e \
   "GRANT ALL ON glance.* TO 'glance'@'localhost' IDENTIFIED BY '${MYSQL_GLANCE_PASS}';"
 
 sed -i \
-  -e "s|^#\s*connection.*|connection = mysql://glance:${MYSQL_GLANCE_PASS}@${CONTROLLER_PUBLIC_IP}/glance|" \
+  -e "s|^#\s*connection\s*=.*|connection = mysql://glance:${MYSQL_GLANCE_PASS}@${CONTROLLER_PUBLIC_IP}/glance|" \
   -e 's/^\(sqlite_db.*\)/# \1/' \
   /etc/glance/glance-{registry,api}.conf
-rm -f /var/lib/glance/glance.sqlite
-
-su -s /bin/sh -c "glance-manage db_sync" glance
 
 ## now update the api and registry conf files
 # service account set in keystone_install.sh
 #
-
 # use swift for storage
 # segment files > 1GB in 100MB chunks
 sed -i \
-  -e 's/^default_store.*/default_store = swift/' \
   -e "s|^swift_store_auth_address.*|swift_store_auth_address = ${OS_AUTH_URL}|" \
   -e 's/^swift_store_user.*/swift_store_user = service:swift/' \
   -e 's/^swift_store_key.*/swift_store_key = swift/' \
@@ -47,6 +42,14 @@ sed -i \
   -e 's/^swift_store_large_object_size.*/swift_store_large_object_size = 1024/' \
   -e 's/^swift_store_large_object_chunk_size.*/swift_store_large_object_chunk_size = 100/' \
   /etc/glance/glance-api.conf
+
+if [ -z "`grep ^stores /etc/glance/glance-api.conf`" ]; then
+  sed -i \
+    -e '/^default_store\s*=.*/d' \
+    -e '/\[glance_store\]/ a\
+default_store = swift\nstores = glance.store.swift.Store' \
+  /etc/glance/glance-api.conf
+fi
 
 if [ -z "`grep ^rpc_backend /etc/glance/glance-api.conf`" ]; then
   sed -i '/^rabbit_host.*/ i\
@@ -67,10 +70,8 @@ for f in api registry; do
   cat >> /etc/glance/glance-${f}.conf <<KAUTH
 
 [keystone_authtoken]
-auth_uri = http://${CONTROLLER_PUBLIC_IP}:5000
-auth_host = ${CONTROLLER_PUBLIC_IP}
-auth_port = 35357
-auth_protocol = http
+auth_uri = http://${CONTROLLER_PUBLIC_IP}:5000/v2.0
+identity_uri = http://${CONTROLLER_PUBLIC_IP}:35357
 admin_tenant_name = service
 admin_user = glance
 admin_password = glance
@@ -78,5 +79,10 @@ admin_password = glance
 KAUTH
 done
 
+# clean up and setup dbs
+rm -f /var/lib/glance/glance.sqlite
+su -s /bin/sh -c "glance-manage db_sync" glance
+
+# restart 'em all
 service glance-api restart
 service glance-registry restart

@@ -1,8 +1,8 @@
-## model an OpenStack system using Ubuntu precise64 box
+## model an OpenStack system using Ubuntu trusty64 box
 
-# use icehouse
+# use juno
 repo_update = "echo 'deb http://ubuntu-cloud.archive.canonical.com/ubuntu "
-repo_update << "precise-proposed/icehouse main' > /etc/apt/sources.list.d/icehouse.list; "
+repo_update << "trusty-proposed/juno main' > /etc/apt/sources.list.d/juno.list; "
 repo_update << "sed -i 's|/us\.|/|' /etc/apt/sources.list; "
 repo_update << "apt-get update; apt-get install -y ubuntu-cloud-keyring; "
 repo_update << "apt-get update"
@@ -40,8 +40,8 @@ hosts_file << "# end of gobstack nodes\n"
 hosts_file << "HOSTS\n"
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "precise64"
-  config.vm.box_url = "http://files.vagrantup.com/precise64.box"
+  config.vm.box = "trusty64"
+  config.vm.box_url = "https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box"
 
   nodes.each do |node_type, (count, ip_addr)|
     count.times do |i|
@@ -77,13 +77,13 @@ Vagrant.configure("2") do |config|
               vbox.customize ["createhd", "--filename", ".vagrant/#{hostname}_disk2.vdi", 
                 "--size", 43*1024]
               vbox.customize ["storageattach", :id, "--storagectl", 
-                "SATA Controller", "--port", 1, "--device", 0, "--type", "hdd", 
+                "SATAController", "--port", 1, "--device", 0, "--type", "hdd", 
                 "--medium", ".vagrant/#{hostname}_disk2.vdi"]
               # sdc for cinder
               vbox.customize ["createhd", "--filename", ".vagrant/#{hostname}_disk3.vdi", 
                 "--size", 10*1024]
               vbox.customize ["storageattach", :id, "--storagectl", 
-                "SATA Controller", "--port", 2, "--device", 0, "--type", "hdd", 
+                "SATAController", "--port", 2, "--device", 0, "--type", "hdd", 
                 "--medium", ".vagrant/#{hostname}_disk3.vdi"]
             when "compute"
               vbox.customize ["modifyvm", :id, "--memory", 2048]

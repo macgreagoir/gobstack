@@ -20,6 +20,7 @@ fi
 apt-get -y install \
   linux-headers-`uname -r` \
   bridge-utils \
+  ipset \
   neutron-plugin-ml2 \
   neutron-plugin-openvswitch-agent \
   openvswitch-datapath-dkms \

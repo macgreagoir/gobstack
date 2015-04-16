@@ -11,6 +11,7 @@ echo 'apt-get install -y python-guestfs' | at now +3 minutes
 
 # use nova-compute-qemu to avoid kvm inside a VM
 apt-get install -y \
+  ipset \
   nova-compute-qemu \
   neutron-common \
   neutron-plugin-ml2 \

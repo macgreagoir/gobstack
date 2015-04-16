@@ -35,7 +35,7 @@ auth_strategy = keystone
 
 notification_driver = neutron.openstack.common.notifier.rpc_notifier
 
-rpc_backend = neutron.openstack.common.rpc.impl_kombu
+rpc_backend = rabbit
 rabbit_host = ${CONTROLLER_PUBLIC_IP}
 rabbit_password = guest
 
@@ -46,6 +46,7 @@ nova_admin_username = nova
 nova_admin_tenant_id = ${SERVICE_TENANT_ID}
 nova_admin_password = nova
 nova_admin_auth_url = http://${CONTROLLER_PUBLIC_IP}:35357/v2.0
+nova_region_name = RegionOne
 
 [quotas]
 
@@ -53,10 +54,8 @@ nova_admin_auth_url = http://${CONTROLLER_PUBLIC_IP}:35357/v2.0
 root_helper = sudo /usr/bin/neutron-rootwrap /etc/neutron/rootwrap.conf
 
 [keystone_authtoken]
-auth_uri = http://${CONTROLLER_PUBLIC_IP}:5000
-auth_host = ${CONTROLLER_PUBLIC_IP}
-auth_port = 35357
-auth_protocol = http
+auth_uri = http://${CONTROLLER_PUBLIC_IP}:5000/v2.0
+identity_uri = http://${CONTROLLER_PUBLIC_IP}:35357
 admin_tenant_name = service
 admin_user = neutron
 admin_password = neutron
