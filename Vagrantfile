@@ -17,6 +17,11 @@ common_pkgs = "apt-get install -y curl ntp python-mysqldb vim"
 # common_pkgs << " linux-image-generic-lts-saucy linux-headers-generic-lts-saucy"
 # common_pkgs << " virtualbox-guest-utils"
 
+# no vagrant vm.network option for this
+neutron_jumbo_frames = "ip link set dev eth2 mtu 9000\n"
+neutron_jumbo_frames << "grep 'mtu 9000' /etc/rc.local || sed -i '/^exit 0/ i\\"
+neutron_jumbo_frames << "ip link set dev eth2 mtu 9000' /etc/rc.local"
+
 # 'node_type' => [num_nodes, starting_ip_addr]
 nodes = {
   'controller' => [1, 100],
@@ -99,6 +104,7 @@ Vagrant.configure("2") do |config|
         if node_type == "controller"
           node.vm.provision :shell, :inline => apt_proxy_server
         end
+        node.vm.provision :shell, :inline => neutron_jumbo_frames
       end
     end
   end
