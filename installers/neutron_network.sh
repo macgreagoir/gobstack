@@ -39,6 +39,7 @@ service openvswitch-switch restart
 
 ## adjust networking here, not in /etc/network/interfaces, to keep Vagrant happy
 ip a del ${NETWORK_FLOATING_IP}/24 dev eth3
+ip r del ${FLOATING_RANGE} dev eth3
 
 # create the standard internal and external bridges
 ovs-vsctl add-br br-int
@@ -50,7 +51,7 @@ ip a add ${NETWORK_FLOATING_IP}/24 dev br-ex
 ip l set dev br-ex up
 ip l set dev br-ex promisc on
 
-service networking restart
+/etc/init.d/networking restart
 
 # config bridge on reboot
 cat > /etc/init.d/br-ex <<BREX
@@ -58,10 +59,11 @@ cat > /etc/init.d/br-ex <<BREX
 ## run from /etc/rc.local
 
 ip a del ${NETWORK_FLOATING_IP}/24 dev eth3 || true
+ip r del ${FLOATING_RANGE} dev eth3 || true
 ip a add ${NETWORK_FLOATING_IP}/24 dev br-ex || true
+ip l set dev br-ex up
 ip l set dev br-ex promisc on
-service networking restart
-service openvswitch-switch restart
+/etc/init.d/networking restart
 /vagrant/tools/daemons_restart.sh neutron
 
 BREX
@@ -76,17 +78,6 @@ fi
 # conf files common to controller and compute nodes too
 source ${BASH_SOURCE%/*}/../files/neutron_conf.sh
 source ${BASH_SOURCE%/*}/../files/ml2_conf_ini.sh
-
-if [ -z "`grep '\[ovs\]' /etc/neutron/plugins/ml2/ml2_conf.ini`" ]; then
-  cat >> /etc/neutron/plugins/ml2/ml2_conf.ini <<OVS
-
-[ovs]
-local_ip = ${PRIVATE_IP}
-tunnel_type = gre
-enable_tunneling = True
-
-OVS
-fi
 
 sed -i \
   -e "s/localhost/${CONTROLLER_PUBLIC_IP}/" \

@@ -20,6 +20,8 @@ if [ `neutron net-list | grep -c 'ext-net'` -eq 0 ]; then
   neutron net-create ext-net --shared --router:external=True
 fi
 
+# gateway IP addr is set, but this is a vbox host-only network, so instance
+# trafiic won't really have a route out
 if [ `neutron subnet-list | grep -c "${FLOATING_RANGE}"` -eq 0 ]; then
   neutron subnet-create ext-net --name ext-subnet \
     --allocation-pool start=${FLOATING_START},end=${FLOATING_END} \

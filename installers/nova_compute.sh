@@ -57,18 +57,6 @@ rm -f /var/lib/nova/nova.sqlite
 source ${BASH_SOURCE%/*}/../files/neutron_conf.sh
 source ${BASH_SOURCE%/*}/../files/ml2_conf_ini.sh
 
-if [ -z "`grep '\[ovs\]' /etc/neutron/plugins/ml2/ml2_conf.ini`" ]; then
-  cat >> /etc/neutron/plugins/ml2/ml2_conf.ini <<OVS
-
-[ovs]
-local_ip = ${PRIVATE_IP}
-tunnel_type = gre
-enable_tunneling = True
-
-OVS
-fi
-
-
 # restart 'em all
 source ${BASH_SOURCE%/*}/../tools/daemons_restart.sh nova
 source ${BASH_SOURCE%/*}/../tools/daemons_restart.sh neutron

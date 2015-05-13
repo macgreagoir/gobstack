@@ -15,8 +15,8 @@ fi
 cat > /etc/neutron/plugins/ml2/ml2_conf.ini <<ML2
 #gobstack
 [ml2]
-type_drivers = gre
-tenant_network_types = gre
+type_drivers = vxlan
+tenant_network_types = vxlan
 mechanism_drivers = openvswitch
 
 [ml2_type_flat]
@@ -27,6 +27,15 @@ mechanism_drivers = openvswitch
 tunnel_id_ranges = 1:1000
 
 [ml2_type_vxlan]
+vni_ranges = 1001:2000
+
+[ovs]
+local_ip = ${PRIVATE_IP}
+enable_tunneling = True
+tunnel_type = vxlan
+
+[agent]
+tunnel_types = vxlan
 
 [securitygroup]
 firewall_driver = neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
