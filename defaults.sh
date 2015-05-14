@@ -6,6 +6,7 @@
 # 10.0.0.0/24 control plane private/data
 # 172.16.1.0/24 cloud public/floating
 # 10.0.1.0/24 cloud private/fixed
+PUBLIC_RANGE="172.16.0.0/24"
 CONTROLLER_PUBLIC_IP=172.16.0.100
 NETWORK_PUBLIC_IP=172.16.0.120
 NETWORK_FLOATING_IP=172.16.1.120

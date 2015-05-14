@@ -66,3 +66,5 @@ OS_USERNAME=$DEMO_USERNAME nova keypair-list
 # get a stackrc
 source ${BASH_SOURCE%/*}/../tools/stackrc_write.sh
 
+# .novaclient is owned by root, but shouldn't be
+chown -R vagrant:vagrant ~vagrant/.novaclient

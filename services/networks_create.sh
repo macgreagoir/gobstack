@@ -20,8 +20,6 @@ if [ `neutron net-list | grep -c 'ext-net'` -eq 0 ]; then
   neutron net-create ext-net --shared --router:external=True
 fi
 
-# gateway IP addr is set, but this is a vbox host-only network, so instance
-# trafiic won't really have a route out
 if [ `neutron subnet-list | grep -c "${FLOATING_RANGE}"` -eq 0 ]; then
   neutron subnet-create ext-net --name ext-subnet \
     --allocation-pool start=${FLOATING_START},end=${FLOATING_END} \
@@ -31,6 +29,13 @@ fi
 if [ `neutron router-list | grep -c "${DEMO_TENANT_NAME}-router"` -eq 0 ]; then
   neutron router-create --tenant-id ${DEMO_TENANT_ID} ${DEMO_TENANT_NAME}-router
   neutron router-gateway-set ${DEMO_TENANT_NAME}-router ext-net
+
+  # ext-subnet gateway is set, but this is a vbox host-only network, so instance
+  # traffic won't really have a route out.
+  # Work-around that to allow access to the floating IP range from this host.
+  neutron router-update demo-router --routes type=dict list=true \
+    destination=${PUBLIC_RANGE},nexthop=${NETWORK_PUBLIC_IP}
+  ip r a ${FLOATING_RANGE} via ${NETWORK_FLOATING_IP}
 fi
 
 if [ `neutron net-list | grep -c ${DEMO_TENANT_NAME}-net` -eq 0 ]; then
