@@ -2,24 +2,23 @@
 ## centralise some useful vars
 
 # based on Vagrantfile net config
-# 172.16.0.0/24 control plane public/mgmt
+# 172.16.0.0/24 control plane public/mgmt/floating
 # 10.0.0.0/24 control plane private/data
-# 172.16.1.0/24 cloud public/floating
 # 10.0.1.0/24 cloud private/fixed
 PUBLIC_RANGE="172.16.0.0/24"
 CONTROLLER_PUBLIC_IP=172.16.0.100
 NETWORK_PUBLIC_IP=172.16.0.120
-NETWORK_FLOATING_IP=172.16.1.120
 STORAGE_PUBLIC_IP=172.16.0.150
 STORAGE_PRIVATE_IP=10.0.0.150
 
 #NEUTRON
 DEMO_TENANT_FIXED_RANGE="10.0.1.0/24"
 DEMO_TENANT_FIXED_GW=10.0.1.1
-FLOATING_RANGE="172.16.1.0/24"
-FLOATING_START=172.16.1.2
-FLOATING_END=172.16.1.119
-FLOATING_GW=172.16.1.1
+FLOATING_START=172.16.0.40
+FLOATING_END=172.16.0.49
+FLAT_START=172.16.0.50
+FLAT_END=172.16.0.59
+PUBLIC_GW=172.16.0.1
 
 PUBLIC_INTERFACE=`/sbin/ifconfig | awk '/172\.16\.0/ {print x}{x = $1}' | head -1`
 PUBLIC_IP=`ip a s ${PUBLIC_INTERFACE} | awk '/inet\ / {print $2}' | cut -d\/ -f 1`

@@ -38,16 +38,17 @@ sysctl -p /etc/sysctl.conf
 service openvswitch-switch restart
 
 ## adjust networking here, not in /etc/network/interfaces, to keep Vagrant happy
-ip a del ${NETWORK_FLOATING_IP}/24 dev eth3
-ip r del ${FLOATING_RANGE} dev eth3
+ip a del ${PUBLIC_IP}/24 dev eth1
+ip r del ${PUBLIC_RANGE} dev eth1
 
 # create the standard internal and external bridges
 ovs-vsctl add-br br-int
 ovs-vsctl add-br br-ex
-ovs-vsctl add-port br-ex eth3
+ovs-vsctl add-port br-ex eth1
+
 # as per the Vagrantfile
 # TODO fix hardcoded netmask
-ip a add ${NETWORK_FLOATING_IP}/24 dev br-ex
+ip a add ${PUBLIC_IP}/24 dev br-ex
 ip l set dev br-ex up
 ip l set dev br-ex promisc on
 
@@ -58,9 +59,9 @@ cat > /etc/init.d/br-ex <<BREX
 #!/bin/bash
 ## run from /etc/rc.local
 
-ip a del ${NETWORK_FLOATING_IP}/24 dev eth3 || true
-ip r del ${FLOATING_RANGE} dev eth3 || true
-ip a add ${NETWORK_FLOATING_IP}/24 dev br-ex || true
+ip a del ${PUBLIC_IP}/24 dev eth1 || true
+ip r del ${PUBLIC_RANGE} dev eth1 || true
+ip a add ${PUBLIC_IP}/24 dev br-ex || true
 ip l set dev br-ex up
 ip l set dev br-ex promisc on
 /etc/init.d/networking restart
@@ -92,6 +93,7 @@ sed -i \
   -e 's/# dhcp_driver =.*/dhcp_driver = neutron.agent.linux.dhcp.Dnsmasq/' \
   -e 's/# \(interface_driver = neutron.agent.linux.interface.OVSInterfaceDriver\)/\1/' \
   -e 's/# use_namespaces =.*/use_namespaces = True/' \
+  -e 's/# dhcp_delete_namespaces =.*/dhcp_delete_namespaces = True/' \
   /etc/neutron/dhcp_agent.ini
 
 sed -i \

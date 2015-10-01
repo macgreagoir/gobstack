@@ -64,13 +64,12 @@ Vagrant.configure("2") do |config|
             node.vm.network "forwarded_port", guest: 3142, host: 3142
             # vnc-console
             node.vm.network "forwarded_port", guest: 6080, host: 6080
-          when "network"
-            # this will be reconfigured but needs here for Vagrant to provision
-            node.vm.network :private_network, :ip => "172.16.1.#{ip_addr+i}", 
-              :netmask => "255.255.255.0"
         end
         node.vm.provider :virtualbox do |vbox|
           vbox.customize ["modifyvm", :id, "--cpus", 1]
+          # promisc all over the shop for neutron flat-net
+          vbox.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+          vbox.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
           case node_type
             when "controller"
               vbox.customize ["modifyvm", :id, "--memory", 2048]
@@ -92,7 +91,6 @@ Vagrant.configure("2") do |config|
                 "--medium", ".vagrant/#{hostname}_disk3.vdi"]
             when "compute"
               vbox.customize ["modifyvm", :id, "--memory", 2048]
-              vbox.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
           end
         end
         node.vm.provision :shell, :inline => hosts_file

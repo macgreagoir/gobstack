@@ -18,5 +18,6 @@ controller_install='for s in mysql keystone glance neutron_controller nova_contr
 vagrant ssh controller0 -c "$controller_install"
 vagrant ssh network0 -c 'sudo /vagrant/installers/neutron_network.sh'
 vagrant ssh storage0 -c 'for s in swift cinder; do sudo /vagrant/installers/${s}.sh; done'
-vagrant ssh controller0 -c 'sudo /vagrant/services/networks_create.sh; sudo /vagrant/services/image_create.sh'
+vagrant ssh network0 -c 'sudo /vagrant/services/networks_create.sh'
+vagrant ssh controller0 -c 'sudo /vagrant/services/image_create.sh'
 for i in 0 1; do vagrant ssh compute$i -c 'sudo /vagrant/installers/nova_compute.sh'; done
