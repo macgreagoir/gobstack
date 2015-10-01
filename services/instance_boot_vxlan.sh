@@ -61,7 +61,7 @@ if [ -n "$INSTANCE_IP" ]; then
   echo
   # echo "From the network node, 'ip netns list | grep dhcp' to find the namespace id, then"
   # echo "'ip netns exec <namespace id> ssh cirros@${INSTANCE_IP}' with passwd 'cubswin:)'"
-  echo "...then \"ssh -o 'IdentityFile ~/.ssh/vagrant.pem' cirros@${FLOATING_IP}\""
+  echo "...then \"ssh -i ~vagrant/.ssh/vagrant.pem -o StrictHostKeyChecking=no cirros@${FLOATING_IP}\""
   echo
 else
   echo "No IP address was found for instance ${INSTANCE_NAME} (${INSTANCE_ID})"
