@@ -79,14 +79,18 @@ Vagrant.configure("2") do |config|
             when "storage"
               vbox.customize ["modifyvm", :id, "--memory", 2048]
               # sdb for swift
-              vbox.customize ["createhd", "--filename", ".vagrant/#{hostname}_disk2.vdi", 
-                "--size", 43*1024]
+              unless File.exists?(".vagrant/#{hostname}_disk2.vdi")
+                vbox.customize ["createhd", "--filename", ".vagrant/#{hostname}_disk2.vdi", 
+                  "--size", 43*1024]
+              end
               vbox.customize ["storageattach", :id, "--storagectl", 
                 "SATAController", "--port", 1, "--device", 0, "--type", "hdd", 
                 "--medium", ".vagrant/#{hostname}_disk2.vdi"]
               # sdc for cinder
-              vbox.customize ["createhd", "--filename", ".vagrant/#{hostname}_disk3.vdi", 
-                "--size", 10*1024]
+              unless File.exists?(".vagrant/#{hostname}_disk3.vdi")
+                vbox.customize ["createhd", "--filename", ".vagrant/#{hostname}_disk3.vdi", 
+                  "--size", 10*1024]
+              end
               vbox.customize ["storageattach", :id, "--storagectl", 
                 "SATAController", "--port", 2, "--device", 0, "--type", "hdd", 
                 "--medium", ".vagrant/#{hostname}_disk3.vdi"]
