@@ -1,5 +1,5 @@
 #!/bin/bash
-## Install and configure MySQL
+## Install and configure MariaDB
 
 if [[ $EUID -ne 0 ]]; then
   echo "This script must be run as root" 1>&2
@@ -14,23 +14,25 @@ if [[ -z `ip addr | grep "${CONTROLLER_PUBLIC_IP}"` ]]; then
 fi
 
 # pre-seed debconf for non-interactive install
-echo "mysql-server-5.5 mysql-server/root_password password ${MYSQL_ROOT_PASS}
-mysql-server-5.5 mysql-server/root_password seen true
-mysql-server-5.5 mysql-server/root_password_again password ${MYSQL_ROOT_PASS}
-mysql-server-5.5 mysql-server/root_password_again seen true
+echo "mariadb-server mysql-server/root_password password ${MYSQL_ROOT_PASS}
+mariadb-server mysql-server/root_password seen true
+mariadb-server mysql-server/root_password_again password ${MYSQL_ROOT_PASS}
+mariadb-server mysql-server/root_password_again seen true
 "  | debconf-set-selections
 
 export DEBIAN_FRONTEND=noninteractive
-apt-get install -y mysql-server python-mysqldb
-# Icehouse needs utf8
-if [ -z "`grep character-set-server.*utf8 /etc/mysql/my.cnf`" ]; then
-  sed -i "/\[mysqld\]/ a \
-collation-server = utf8_general_ci\ninit-connect='SET NAMES utf8'\ncharacter-set-server = utf8" \
-  /etc/mysql/my.cnf
+apt-get install -y mariadb-server python3-pymysql
+
+# OpenStack requires utf8 and the controller IP as bind address
+MARIADB_CONF=/etc/mysql/mariadb.conf.d/50-server.cnf
+if [ -z "`grep character-set-server.*utf8 ${MARIADB_CONF}`" ]; then
+  sed -i "/^\[mysqld\]/ a \
+collation-server = utf8_general_ci\ncharacter-set-server = utf8" \
+  ${MARIADB_CONF}
 fi
 sed -i "s/^bind\-address.*/bind\-address = ${CONTROLLER_PUBLIC_IP}/" \
-  /etc/mysql/my.cnf
-service mysql restart
+  ${MARIADB_CONF}
+service mariadb restart
 
 mysql -uroot -p${MYSQL_ROOT_PASS} -e \
   "GRANT ALL ON *.* TO root@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASS}' WITH GRANT OPTION;"
@@ -39,14 +41,15 @@ mysql -uroot -p${MYSQL_ROOT_PASS} -e \
 
 # clean-up for added security
 mysql -uroot -p${MYSQL_ROOT_PASS} -e \
-  "DROP USER ''@'localhost', ''@'$(hostname)';"
+  "DROP USER IF EXISTS ''@'localhost';"
 mysql -uroot -p${MYSQL_ROOT_PASS} -e \
-  "DROP USER 'root'@'%';"
+  "DROP USER IF EXISTS ''@'$(hostname)';"
+mysql -uroot -p${MYSQL_ROOT_PASS} -e \
+  "DROP USER IF EXISTS 'root'@'%';"
 mysql -uroot -p${MYSQL_ROOT_PASS} -e \
   "DELETE FROM mysql.db WHERE Db LIKE 'test%';"
 mysql -uroot -p${MYSQL_ROOT_PASS} -e \
-  "DROP DATABASE test;"
+  "DROP DATABASE IF EXISTS test;"
 
 mysqladmin -uroot -p${MYSQL_ROOT_PASS} flush-privileges
 mysqladmin -uroot -p${MYSQL_ROOT_PASS} status
-

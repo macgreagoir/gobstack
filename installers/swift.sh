@@ -14,15 +14,14 @@ if [[ -z `ip addr | grep "${STORAGE_PUBLIC_IP}"` ]]; then
   exit 1
 fi
 
-## install swift et al, and python-keystone
+## install swift et al
 apt-get -y install \
-  memcached parted python-webob xfsprogs \
+  memcached parted python3-webob xfsprogs \
   swift swift-account swift-container swift-object swift-proxy \
-  python-keystoneclient python-swiftclient
+  python3-keystoneclient python3-swiftclient python3-keystonemiddleware
 
 
 ## create /dev/sdb1
-# do we have sdb1 already?
 disks=$(fdisk /dev/sdb 2>/dev/null <<FDISK
 p
 q
@@ -35,9 +34,8 @@ if [[ $disks =~ 'sdb1' ]]; then
   file /dev/sdb1
   mount | grep sdb1
   ls -l /srv/sdb1
-  ls -l /etc/rsynsd.conf
+  ls -l /etc/rsyncd.conf
 else
-  # create it anew
   fdisk /dev/sdb <<FDISK
 n
 p
@@ -48,7 +46,6 @@ p
 w
 FDISK
 
-  # ...and mount it
   partprobe
   mkfs.xfs -i size=1024 /dev/sdb1
   mkdir -p /mnt/sdb1
@@ -60,7 +57,7 @@ fi
 # tree for this storage configuration
 # we are creating four virtual devices on one host
 mkdir -p /mnt/sdb1/{1..4}
-ln -s /mnt/sdb1/{1..4} /srv
+ln -sf /mnt/sdb1/{1..4} /srv
 for i in {1..4}; do mkdir -p /srv/$i/node/sdb$i; done
 # ...and system conf
 mkdir -p /etc/swift/{account-server,container-server,object-server}
@@ -70,9 +67,7 @@ mkdir -p /var/swift/recon
 chown -R swift:swift /mnt/sdb1/{1..4} /srv/{1..4} /etc/swift /var/cache/swift /var/run/swift /var/swift/recon
 
 
-## modules for multiple rsync targets: `rsync localhost::foo60xx`
-# based on the tree above
-# max connections should be higher in production: man rsyncd.conf
+## modules for multiple rsync targets
 cat > /etc/rsyncd.conf<<RSD
 # common
 
@@ -126,10 +121,14 @@ if [ -z "`grep swift_hash_path_suffix /etc/swift/swift.conf 2>/dev/null`" ]; the
 [swift-hash]
 swift_hash_path_prefix = ${SWIFT_PRE}
 swift_hash_path_suffix = ${SWIFT_SUF}
+
+[storage-policy:0]
+name = Policy-0
+default = yes
 SCONF
 fi
 
-## now we need /etc/swift{account,container,object}-server/{1..4}.conf
+## now we need /etc/swift/{account,container,object}-server/{1..4}.conf
 # rm the standard single conf file per service
 rm -f /etc/swift/{account,container,object}-server.conf
 
@@ -241,8 +240,7 @@ done
 cd
 
 
-# proxy conf
-# keystone for swift configured in keystone_install.sh
+# proxy conf using keystonemiddleware (replaces keystoneclient.middleware)
 cat > /etc/swift/proxy-server.conf <<SPRY
 [DEFAULT]
 bind_port = 8080
@@ -259,7 +257,7 @@ use = egg:swift#healthcheck
 
 [filter:keystoneauth]
 use = egg:swift#keystoneauth
-operator_roles = Member,admin
+operator_roles = member,admin
 
 [filter:proxy-logging]
 use = egg:swift#proxy_logging
@@ -274,15 +272,18 @@ account_autocreate = true
 set log_facility = LOG_LOCAL1
 
 [filter:authtoken]
-paste.filter_factory = keystoneclient.middleware.auth_token:filter_factory
-identity_uri = http://${CONTROLLER_PUBLIC_IP}:35357
-auth_uri = http://${CONTROLLER_PUBLIC_IP}:5000/v2.0
-admin_tenant_name = service
-admin_user = swift
-admin_password = swift
+paste.filter_factory = keystonemiddleware.auth_token:filter_factory
+www_authenticate_uri = http://${CONTROLLER_PUBLIC_IP}:5000
+auth_url = http://${CONTROLLER_PUBLIC_IP}:5000
+memcached_servers = ${CONTROLLER_PUBLIC_IP}:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+username = swift
+password = swift
 cache = swift.cache
 include_service_catalog = False
-signing_dir = /var/cache/swift/keystone-signing
 
 SPRY
 
@@ -310,9 +311,7 @@ OEX
 ## start 'er up
 swift-init all restart
 swift-init all stop
-# should we really need to do this?
 chown -R swift:swift /mnt/sdb1/{1..4} /srv/{1..4} /etc/swift /var/cache/swift /var/run/swift
 swift-init all start
 
-swift -A $OS_AUTH_URL -U service:swift -K swift -V 2.0 stat
-
+openstack object store account show

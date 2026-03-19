@@ -9,45 +9,53 @@ if [[ -z `ip addr | grep "${CONTROLLER_PUBLIC_IP}"` ]]; then
   exit 1
 fi
 
-
-OS_TENANT_NAME=admin
-DEMO_TENANT_ID=`keystone tenant-list | awk "/\ ${DEMO_TENANT_NAME}\ / {print \\$2}"`
+OS_PROJECT_NAME=admin
+DEMO_PROJECT_ID=$(openstack project show ${DEMO_TENANT_NAME} -f value -c id)
 
 # these are wrapped in if statements to avoid duplicates and errors, but
 # really if any are skipped they all break for var dependencies
 
-if [ `neutron net-list | grep -c 'ext-net'` -eq 0 ]; then
-  neutron net-create ext-net --shared --router:external=True
+if [ $(openstack network list -f value -c Name | grep -c '^ext-net$') -eq 0 ]; then
+  openstack network create \
+    --external \
+    --provider-physical-network provider \
+    --provider-network-type flat \
+    ext-net
 fi
 
-if [ `neutron subnet-list | grep -c "${FLOATING_RANGE}"` -eq 0 ]; then
-  neutron subnet-create ext-net --name ext-subnet \
+if [ $(openstack subnet list -f value -c Network | grep -c "${FLOATING_RANGE}") -eq 0 ]; then
+  openstack subnet create ext-subnet \
+    --network ext-net \
     --allocation-pool start=${FLOATING_START},end=${FLOATING_END} \
-    --disable-dhcp --gateway ${FLOATING_GW} ${FLOATING_RANGE}
+    --no-dhcp \
+    --gateway ${FLOATING_GW} \
+    --subnet-range ${FLOATING_RANGE}
 fi
 
-if [ `neutron router-list | grep -c "${DEMO_TENANT_NAME}-router"` -eq 0 ]; then
-  neutron router-create --tenant-id ${DEMO_TENANT_ID} ${DEMO_TENANT_NAME}-router
-  neutron router-gateway-set ${DEMO_TENANT_NAME}-router ext-net
+if [ $(openstack router list -f value -c Name | grep -c "${DEMO_TENANT_NAME}-router") -eq 0 ]; then
+  openstack router create --project ${DEMO_PROJECT_ID} ${DEMO_TENANT_NAME}-router
+  openstack router set --external-gateway ext-net ${DEMO_TENANT_NAME}-router
 
   # ext-subnet gateway is set, but this is a vbox host-only network, so instance
   # traffic won't really have a route out.
   # Work-around that to allow access to the floating IP range from this host.
-  neutron router-update demo-router --routes type=dict list=true \
-    destination=${PUBLIC_RANGE},nexthop=${NETWORK_PUBLIC_IP}
-  ip r a ${FLOATING_RANGE} via ${NETWORK_FLOATING_IP}
+  openstack router set --route destination=${PUBLIC_RANGE},gateway=${NETWORK_PUBLIC_IP} \
+    ${DEMO_TENANT_NAME}-router
+  ip r a ${FLOATING_RANGE} via ${NETWORK_FLOATING_IP} 2>/dev/null || true
 fi
 
-if [ `neutron net-list | grep -c ${DEMO_TENANT_NAME}-net` -eq 0 ]; then
-  neutron net-create --tenant-id ${DEMO_TENANT_ID} ${DEMO_TENANT_NAME}-net
+if [ $(openstack network list -f value -c Name | grep -c "${DEMO_TENANT_NAME}-net") -eq 0 ]; then
+  openstack network create --project ${DEMO_PROJECT_ID} ${DEMO_TENANT_NAME}-net
 
-  neutron subnet-create ${DEMO_TENANT_NAME}-net --name ${DEMO_TENANT_NAME}-subnet --tenant-id ${DEMO_TENANT_ID} \
-    --gateway ${DEMO_TENANT_FIXED_GW} ${DEMO_TENANT_FIXED_RANGE}
+  openstack subnet create ${DEMO_TENANT_NAME}-subnet \
+    --network ${DEMO_TENANT_NAME}-net \
+    --project ${DEMO_PROJECT_ID} \
+    --gateway ${DEMO_TENANT_FIXED_GW} \
+    --subnet-range ${DEMO_TENANT_FIXED_RANGE}
 
-  neutron router-interface-add ${DEMO_TENANT_NAME}-router ${DEMO_TENANT_NAME}-subnet
+  openstack router add subnet ${DEMO_TENANT_NAME}-router ${DEMO_TENANT_NAME}-subnet
 fi
 
-OS_TENANT_NAME=$DEMO_TENANT_NAME
+OS_PROJECT_NAME=${DEMO_TENANT_NAME}
 
-for n in net subnet router; do neutron ${n}-list; done
-
+for r in network subnet router; do openstack ${r} list; done

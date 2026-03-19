@@ -21,11 +21,11 @@ FLOATING_START=172.16.1.2
 FLOATING_END=172.16.1.119
 FLOATING_GW=172.16.1.1
 
-PUBLIC_INTERFACE=`/sbin/ifconfig | awk '/172\.16\.0/ {print x}{x = $1}' | head -1`
-PUBLIC_IP=`ip a s ${PUBLIC_INTERFACE} | awk '/inet\ / {print $2}' | cut -d\/ -f 1`
+PUBLIC_INTERFACE=$(ip -o addr show | awk '/172\.16\.0/ {split($2,a,"@"); print a[1]}' | head -1)
+PUBLIC_IP=$(ip -o addr show dev ${PUBLIC_INTERFACE} 2>/dev/null | awk '/inet / {split($4,a,"/"); print a[1]}' | head -1)
 
-PRIVATE_INTERFACE=`/sbin/ifconfig | awk '/10\.0\.0/ {print x}{x = $1}' | head -1`
-PRIVATE_IP=`ip a s ${PRIVATE_INTERFACE} | awk '/inet\ / {print $2}' | cut -d\/ -f 1`
+PRIVATE_INTERFACE=$(ip -o addr show | awk '/10\.0\.0/ {split($2,a,"@"); print a[1]}' | head -1)
+PRIVATE_IP=$(ip -o addr show dev ${PRIVATE_INTERFACE} 2>/dev/null | awk '/inet / {split($4,a,"/"); print a[1]}' | head -1)
 
 MYSQL_ROOT_PASS=openstack
 MYSQL_CINDER_PASS=openstack
@@ -33,6 +33,7 @@ MYSQL_GLANCE_PASS=openstack
 MYSQL_KEYSTONE_PASS=openstack
 MYSQL_NEUTRON_PASS=openstack
 MYSQL_NOVA_PASS=openstack
+MYSQL_PLACEMENT_PASS=openstack
 
 NEUTRON_METADATA_PASS=openstack
 
@@ -43,13 +44,13 @@ DEMO_TENANT_DESC="Demo Tenant"
 DEMO_USERNAME=demo
 DEMO_PASSWORD=openstack
 
-# standard env vars used by openstack cli tools
-export OS_SERVICE_TOKEN=ADMIN
-export OS_SERVICE_ENDPOINT=http://${CONTROLLER_PUBLIC_IP}:35357/v2.0
-
-export OS_TENANT_NAME=${DEMO_TENANT_NAME}
+# standard env vars used by openstack cli tools (Keystone v3)
+export OS_PROJECT_DOMAIN_NAME=Default
+export OS_USER_DOMAIN_NAME=Default
+export OS_PROJECT_NAME=admin
 export OS_USERNAME=admin
 export OS_PASSWORD=openstack
-export OS_AUTH_URL=http://${CONTROLLER_PUBLIC_IP}:5000/v2.0
+export OS_AUTH_URL=http://${CONTROLLER_PUBLIC_IP}:5000/v3
+export OS_IDENTITY_API_VERSION=3
+export OS_IMAGE_API_VERSION=2
 export OS_NO_CACHE=1
-

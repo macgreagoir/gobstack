@@ -1,8 +1,8 @@
 #!/bin/bash
-## Restart any daemons with an upstart script matching ${1}-*
+## Restart any systemd services matching ${1}-*
 
 if [ ! "$1" ]; then
-  echo "usage: $0 nova|cinder" 1>&2
+  echo "usage: $0 nova|cinder|neutron" 1>&2
   exit 1
 fi
 
@@ -11,18 +11,14 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-for s in `ls /etc/init/${1}-* | cut -d '/' -f4 | cut -d '.' -f1`
-do
-  service $s stop
-done
-for s in `ls /etc/init/${1}-* | cut -d '/' -f4 | cut -d '.' -f1`
-do
-  service $s start
+for s in $(systemctl list-units --type=service --state=loaded --no-legend --no-pager "${1}-*.service" \
+  | awk '{print $1}'); do
+  systemctl restart "$s"
 done
 
 # compute nodes will have this
-if [ -f /etc/init/libvirt-bin.conf ]; then
-  service libvirt-bin restart
+if systemctl list-units --type=service --no-legend --no-pager 'libvirtd.service' | grep -q libvirtd; then
+  systemctl restart libvirtd
 fi
 
 # seems to need time for things to start up, so postpone return
