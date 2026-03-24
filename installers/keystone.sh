@@ -9,7 +9,7 @@ fi
 source ${BASH_SOURCE%/*}/../defaults.sh
 
 # this to check we are on the controller
-if [[ -z `ip addr | grep "${CONTROLLER_PUBLIC_IP}"` ]]; then
+if [[ -z $(ip addr | grep "${CONTROLLER_PUBLIC_IP}") ]]; then
   echo "This script expects an interface with ${CONTROLLER_PUBLIC_IP}" 1>&2
   exit 1
 fi
@@ -26,7 +26,7 @@ sed -i \
   /etc/keystone/keystone.conf
 
 # enable fernet tokens (default in modern OpenStack)
-if [ -z "`grep '^provider' /etc/keystone/keystone.conf`" ]; then
+if [ -z "$(grep '^provider' /etc/keystone/keystone.conf)" ]; then
   sed -i '/^\[token\]/ a\
 provider = fernet' /etc/keystone/keystone.conf
 fi

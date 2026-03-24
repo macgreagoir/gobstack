@@ -8,7 +8,7 @@ fi
 
 source ${BASH_SOURCE%/*}/../defaults.sh
 
-if [ -z "`grep ^#gobstack /etc/neutron/plugins/ml2/ml2_conf.ini`" ]; then
+if [ -z "$(grep ^#gobstack /etc/neutron/plugins/ml2/ml2_conf.ini)" ]; then
   cp /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugins/ml2/ml2_conf.ini.default
 fi
 

@@ -10,7 +10,7 @@ fi
 source ${BASH_SOURCE%/*}/../defaults.sh
 
 # this expects to run on a network node
-if [[ -z `ip addr | grep "${NETWORK_PUBLIC_IP}"` ]]; then
+if [[ -z $(ip addr | grep "${NETWORK_PUBLIC_IP}") ]]; then
   echo "This script expects an interface with ${NETWORK_PUBLIC_IP}" 1>&2
   exit 1
 fi
@@ -67,7 +67,7 @@ systemctl restart networking || true
 BREX
 chmod +x /etc/init.d/br-ex
 
-if [ -z "`grep '\/etc\/init\.d\/br\-ex' /etc/rc.local`" ]; then
+if [ -z "$(grep '\/etc\/init\.d\/br\-ex' /etc/rc.local)" ]; then
   sed -i '/^exit 0/ i\
 /etc/init.d/br-ex\n' /etc/rc.local
 fi

@@ -8,7 +8,7 @@ fi
 
 source ${BASH_SOURCE%/*}/../defaults.sh
 
-if [[ -z `ip addr | grep "${CONTROLLER_PUBLIC_IP}"` ]]; then
+if [[ -z $(ip addr | grep "${CONTROLLER_PUBLIC_IP}") ]]; then
   echo "This script expects an interface with ${CONTROLLER_PUBLIC_IP}" 1>&2
   exit 1
 fi
@@ -29,7 +29,7 @@ sed -i \
   /etc/glance/glance-api.conf
 
 # use swift for image storage
-if [ -z "`grep '^default_store.*swift' /etc/glance/glance-api.conf`" ]; then
+if [ -z "$(grep '^default_store.*swift' /etc/glance/glance-api.conf)" ]; then
   sed -i '/^\[glance_store\]/,/^\[/ {
     /^\[glance_store\]/ a\
 default_store = swift\nstores = glance.store.swift.Store\nswift_store_create_container_on_put = True\nswift_store_container = glance

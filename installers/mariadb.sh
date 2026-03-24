@@ -8,7 +8,7 @@ fi
 
 source ${BASH_SOURCE%/*}/../defaults.sh
 
-if [[ -z `ip addr | grep "${CONTROLLER_PUBLIC_IP}"` ]]; then
+if [[ -z $(ip addr | grep "${CONTROLLER_PUBLIC_IP}") ]]; then
   echo "This script expects an interface with ${CONTROLLER_PUBLIC_IP}" 1>&2
   exit 1
 fi
@@ -25,7 +25,7 @@ apt-get install -y mariadb-server python3-pymysql
 
 # OpenStack requires utf8 and the controller IP as bind address
 MARIADB_CONF=/etc/mysql/mariadb.conf.d/50-server.cnf
-if [ -z "`grep character-set-server.*utf8 ${MARIADB_CONF}`" ]; then
+if [ -z "$(grep character-set-server.*utf8 ${MARIADB_CONF})" ]; then
   sed -i "/^\[mysqld\]/ a \
 collation-server = utf8_general_ci\ncharacter-set-server = utf8" \
   ${MARIADB_CONF}

@@ -9,7 +9,7 @@ fi
 source ${BASH_SOURCE%/*}/../defaults.sh
 
 # this expects to run on a storage node
-if [[ -z `ip addr | grep "${STORAGE_PUBLIC_IP}"` ]]; then
+if [[ -z $(ip addr | grep "${STORAGE_PUBLIC_IP}") ]]; then
   echo "This script expects an interface with ${STORAGE_PUBLIC_IP}" 1>&2
   exit 1
 fi

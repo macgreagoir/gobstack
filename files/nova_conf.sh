@@ -8,7 +8,7 @@ fi
 
 source ${BASH_SOURCE%/*}/../defaults.sh
 
-if [ -z "`grep ^#gobstack /etc/nova/nova.conf`" ]; then
+if [ -z "$(grep ^#gobstack /etc/nova/nova.conf)" ]; then
   cp /etc/nova/nova.conf /etc/nova/nova.conf.default
 fi
 

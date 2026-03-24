@@ -10,7 +10,7 @@ fi
 source ${BASH_SOURCE%/*}/../defaults.sh
 
 # this expects to run on the controller node
-if [[ -z `ip addr | grep "${CONTROLLER_PUBLIC_IP}"` ]]; then
+if [[ -z $(ip addr | grep "${CONTROLLER_PUBLIC_IP}") ]]; then
   echo "This script expects an interface with ${CONTROLLER_PUBLIC_IP}" 1>&2
   exit 1
 fi

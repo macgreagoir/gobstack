@@ -3,8 +3,8 @@
 
 # install requirements on Ubuntu/Debian if not already present
 if [[ -f /etc/debian_version ]]; then
-  [[ -n `which vagrant` ]]    || sudo apt-get install -y vagrant
-  [[ -n `which vboxmanage` ]] || sudo apt-get install -y virtualbox
+  [[ -n $(which vagrant) ]]    || sudo apt-get install -y vagrant
+  [[ -n $(which vboxmanage) ]] || sudo apt-get install -y virtualbox
 fi
 
 echo "You have seven (7) seconds to stop me before I destroy and rebuild your VMs."

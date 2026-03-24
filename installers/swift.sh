@@ -9,7 +9,7 @@ fi
 source ${BASH_SOURCE%/*}/../defaults.sh
 
 # this expects to run on a storage node
-if [[ -z `ip addr | grep "${STORAGE_PUBLIC_IP}"` ]]; then
+if [[ -z $(ip addr | grep "${STORAGE_PUBLIC_IP}") ]]; then
   echo "This script expects an interface with ${STORAGE_PUBLIC_IP}" 1>&2
   exit 1
 fi
@@ -114,9 +114,9 @@ rsync rsync://pub@localhost
 
 
 ## generate a hash to use across all swift nodes in the system
-if [ -z "`grep swift_hash_path_suffix /etc/swift/swift.conf 2>/dev/null`" ]; then
-  SWIFT_PRE=`< /dev/urandom tr -dc A-Za-z0-9_ | head -c16`
-  SWIFT_SUF=`< /dev/urandom tr -dc A-Za-z0-9_ | head -c16`
+if [ -z "$(grep swift_hash_path_suffix /etc/swift/swift.conf 2>/dev/null)" ]; then
+  SWIFT_PRE=$(< /dev/urandom tr -dc A-Za-z0-9_ | head -c16)
+  SWIFT_SUF=$(< /dev/urandom tr -dc A-Za-z0-9_ | head -c16)
   cat > /etc/swift/swift.conf <<SCONF
 [swift-hash]
 swift_hash_path_prefix = ${SWIFT_PRE}
