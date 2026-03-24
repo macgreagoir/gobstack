@@ -1,10 +1,43 @@
 #!/bin/bash
 ## bootstrap the whole system
 
-# install requirements on Ubuntu/Debian if not already present
-if [[ -f /etc/debian_version ]]; then
-  [[ -n $(which vagrant) ]]    || sudo apt-get install -y vagrant
-  [[ -n $(which vboxmanage) ]] || sudo apt-get install -y virtualbox
+# check for an existing clean.sh before doing anything else
+if [[ -f $(dirname "$0")/clean.sh ]]; then
+  echo "clean.sh already exists; leaving it intact."
+else
+  # record which requirements this run installs so clean.sh can purge them
+  INSTALLED_VAGRANT=false
+  INSTALLED_VBOX=false
+
+  if [[ -f /etc/debian_version ]]; then
+    if [[ -z $(which vagrant) ]]; then
+      sudo apt-get install -y vagrant
+      INSTALLED_VAGRANT=true
+    fi
+    if [[ -z $(which vboxmanage) ]]; then
+      sudo apt-get install -y virtualbox
+      INSTALLED_VBOX=true
+    fi
+  fi
+
+  # write clean.sh
+  cat > $(dirname "$0")/clean.sh <<CLEAN
+#!/bin/bash
+## clean up everything installed by bootstrap.sh
+
+vagrant halt
+vagrant destroy -f
+
+CLEAN
+
+  if [[ $INSTALLED_VAGRANT == true ]]; then
+    echo "sudo apt-get purge -y vagrant" >> $(dirname "$0")/clean.sh
+  fi
+  if [[ $INSTALLED_VBOX == true ]]; then
+    echo "sudo apt-get purge -y virtualbox" >> $(dirname "$0")/clean.sh
+  fi
+
+  chmod +x $(dirname "$0")/clean.sh
 fi
 
 echo "You have seven (7) seconds to stop me before I destroy and rebuild your VMs."
