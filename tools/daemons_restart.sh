@@ -12,7 +12,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 for s in $(systemctl list-units --type=service --state=loaded --no-legend --no-pager "${1}-*.service" \
-  | awk '{print $1}'); do
+  | grep -oP '[a-z0-9_-]+\.service'); do
   systemctl restart "$s"
 done
 
