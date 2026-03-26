@@ -7,12 +7,25 @@ if [[ -f $(dirname "$0")/clean.sh ]]; then
 else
   # record which requirements this run installs so clean.sh can purge them
   INSTALLED_VAGRANT=false
+  INSTALLED_VAGRANT_REPO=false
   INSTALLED_VBOX=false
 
   if [[ -f /etc/debian_version ]]; then
     if [[ -z $(which vagrant) ]]; then
+      DISTRO_CODENAME=$(lsb_release -cs)
+      # fall back to noble if this codename isn't in HashiCorp's repo
+      HASHICORP_CODENAME=${DISTRO_CODENAME}
+      curl -fsSL "https://apt.releases.hashicorp.com/dists/${DISTRO_CODENAME}/Release" \
+        -o /dev/null --silent --fail || HASHICORP_CODENAME=noble
+      curl -fsSL https://apt.releases.hashicorp.com/gpg \
+        | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp.gpg
+      echo "deb [arch=amd64 signed-by=/usr/share/keyrings/hashicorp.gpg] \
+https://apt.releases.hashicorp.com ${HASHICORP_CODENAME} main" \
+        | sudo tee /etc/apt/sources.list.d/hashicorp.list
+      sudo apt-get update
       sudo apt-get install -y vagrant
       INSTALLED_VAGRANT=true
+      INSTALLED_VAGRANT_REPO=true
     fi
     if [[ -z $(which vboxmanage) ]]; then
       sudo apt-get install -y virtualbox
@@ -32,6 +45,10 @@ CLEAN
 
   if [[ $INSTALLED_VAGRANT == true ]]; then
     echo "sudo apt-get purge -y vagrant" >> $(dirname "$0")/clean.sh
+  fi
+  if [[ $INSTALLED_VAGRANT_REPO == true ]]; then
+    echo "sudo rm -f /usr/share/keyrings/hashicorp.gpg /etc/apt/sources.list.d/hashicorp.list" \
+      >> $(dirname "$0")/clean.sh
   fi
   if [[ $INSTALLED_VBOX == true ]]; then
     echo "sudo apt-get purge -y virtualbox" >> $(dirname "$0")/clean.sh
