@@ -14,7 +14,7 @@ if [[ -z $(ip addr | grep "${CONTROLLER_PUBLIC_IP}") ]]; then
   exit 1
 fi
 
-apt-get install -y keystone apache2 libapache2-mod-wsgi-py3 memcached python3-memcache
+apt-get install -y keystone apache2 libapache2-mod-wsgi-py3 memcached python3-memcache python3-openstackclient
 
 mysql -uroot -p${MYSQL_ROOT_PASS} -e \
   "CREATE DATABASE IF NOT EXISTS keystone;"
@@ -56,6 +56,13 @@ sed -i "s/^ServerName.*/ServerName controller0/" /etc/apache2/apache2.conf 2>/de
 
 service apache2 restart
 
+# wait for keystone to be ready
+count=12
+until openstack token issue >/dev/null 2>&1 || (( count-- == 0 )); do
+  echo "Waiting for keystone..."
+  sleep 5
+done
+
 # remove the default SQLite db
 rm -f /var/lib/keystone/keystone.db
 
@@ -71,8 +78,8 @@ sleep 3
 openstack project create --domain default --description "Service Project" service
 openstack project create --domain default --description "${DEMO_TENANT_DESC}" ${DEMO_TENANT_NAME}
 
-# for Horizon and general use
-openstack role create member
+# for Horizon and general use (member role may already exist in modern Keystone)
+openstack role create member || openstack role show member
 
 # from defaults.sh, the OS_* vars refer to the admin user
 # admin user was already created by keystone-manage bootstrap in the admin project

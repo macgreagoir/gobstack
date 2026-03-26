@@ -36,11 +36,7 @@ if [ $(openstack router list -f value -c Name | grep -c "${DEMO_TENANT_NAME}-rou
   openstack router create --project ${DEMO_PROJECT_ID} ${DEMO_TENANT_NAME}-router
   openstack router set --external-gateway ext-net ${DEMO_TENANT_NAME}-router
 
-  # ext-subnet gateway is set, but this is a vbox host-only network, so instance
-  # traffic won't really have a route out.
-  # Work-around that to allow access to the floating IP range from this host.
-  openstack router set --route destination=${PUBLIC_RANGE},gateway=${NETWORK_PUBLIC_IP} \
-    ${DEMO_TENANT_NAME}-router
+  # add a host route to reach the floating IP range via the network node
   ip r a ${FLOATING_RANGE} via ${NETWORK_FLOATING_IP} 2>/dev/null || true
 fi
 

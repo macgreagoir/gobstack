@@ -50,7 +50,7 @@ FDISK
   mkfs.xfs -i size=1024 /dev/sdb1
   mkdir -p /mnt/sdb1
   sed -i "/\/dev\/sdb1/d" /etc/fstab
-  echo "/dev/sdb1 /mnt/sdb1 xfs noatime,nodiratime,nobarrier,logbufs=8 0 0" >> /etc/fstab
+  echo "/dev/sdb1 /mnt/sdb1 xfs noatime,nodiratime,logbufs=8 0 0" >> /etc/fstab
   mount /dev/sdb1
 fi
 
@@ -314,4 +314,4 @@ swift-init all stop
 chown -R swift:swift /mnt/sdb1/{1..4} /srv/{1..4} /etc/swift /var/cache/swift /var/run/swift
 swift-init all start
 
-openstack object store account show
+swift stat || true

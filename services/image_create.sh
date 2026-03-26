@@ -34,5 +34,5 @@ openstack image list
 CIRROS_IMAGE_ID=$(openstack image list -f value -c ID -c Name | awk '/CirrOS/ {print $1}')
 DEMO_PROJECT_ID=$(openstack project show ${DEMO_TENANT_NAME} -f value -c id)
 
-openstack image add project ${CIRROS_IMAGE_ID} ${DEMO_PROJECT_ID}
-openstack image member list ${CIRROS_IMAGE_ID}
+openstack image add project ${CIRROS_IMAGE_ID} ${DEMO_PROJECT_ID} || true
+openstack image member list ${CIRROS_IMAGE_ID} || true

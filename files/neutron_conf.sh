@@ -14,8 +14,6 @@ fi
 
 source ${BASH_SOURCE%/*}/../defaults.sh
 
-SERVICE_PROJECT_ID=$(openstack project show service -f value -c id)
-
 if [ -z "$(grep ^#gobstack /etc/neutron/neutron.conf)" ]; then
   cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.default
 fi

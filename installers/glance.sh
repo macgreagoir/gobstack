@@ -28,20 +28,13 @@ sed -i \
   -e "s|^#\s*connection\s*=.*|connection = mysql+pymysql://glance:${MYSQL_GLANCE_PASS}@${CONTROLLER_PUBLIC_IP}/glance|" \
   /etc/glance/glance-api.conf
 
-# use swift for image storage
-if [ -z "$(grep '^default_store.*swift' /etc/glance/glance-api.conf)" ]; then
+# use filesystem for image storage
+if [ -z "$(grep '^default_store\s*=\s*file' /etc/glance/glance-api.conf)" ]; then
   sed -i '/^\[glance_store\]/,/^\[/ {
     /^\[glance_store\]/ a\
-default_store = swift\nstores = glance.store.swift.Store\nswift_store_create_container_on_put = True\nswift_store_container = glance
+default_store = file\nstores = glance.store.filesystem.Store\nfilesystem_store_datadir = /var/lib/glance/images/
   }' /etc/glance/glance-api.conf 2>/dev/null || true
 fi
-
-# set swift auth address
-sed -i \
-  -e "s|^swift_store_auth_address.*|swift_store_auth_address = ${OS_AUTH_URL}|" \
-  -e 's/^swift_store_user.*/swift_store_user = service:swift/' \
-  -e 's/^swift_store_key.*/swift_store_key = swift/' \
-  /etc/glance/glance-api.conf
 
 # rm the keystone_authtoken block and replace with v3
 sed -i '/\[keystone_authtoken\]/,/^$/d' /etc/glance/glance-api.conf

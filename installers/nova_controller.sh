@@ -64,11 +64,16 @@ nova-manage cell_v2 list_cells
 # restart services
 source ${BASH_SOURCE%/*}/../tools/daemons_restart.sh nova
 
+# wait for nova-api to be ready
+count=12
+until openstack compute service list >/dev/null 2>&1 || (( count-- == 0 )); do
+  echo "Waiting for nova-api..."
+  sleep 5
+done
+
 # add ping and ssh access to the default security group
 openstack security group rule create --proto icmp --remote-ip 0.0.0.0/0 default
 openstack security group rule create --proto tcp --dst-port 22 --remote-ip 0.0.0.0/0 default
-
-nova-manage service list
 
 # create a keypair for the vagrant user as the non-admin user
 OS_PROJECT_NAME=${DEMO_TENANT_NAME} OS_USERNAME=${DEMO_USERNAME} \

@@ -38,6 +38,8 @@ mysql -uroot -p${MYSQL_ROOT_PASS} -e \
   "GRANT ALL ON *.* TO root@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASS}' WITH GRANT OPTION;"
 mysql -uroot -p${MYSQL_ROOT_PASS} -e \
   "GRANT ALL ON *.* TO root@'${CONTROLLER_PUBLIC_IP}' IDENTIFIED BY '${MYSQL_ROOT_PASS}' WITH GRANT OPTION;"
+mysql -uroot -p${MYSQL_ROOT_PASS} -e \
+  "GRANT ALL ON *.* TO root@'${STORAGE_PUBLIC_IP}' IDENTIFIED BY '${MYSQL_ROOT_PASS}' WITH GRANT OPTION;"
 
 # clean-up for added security
 mysql -uroot -p${MYSQL_ROOT_PASS} -e \
