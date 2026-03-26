@@ -1,6 +1,21 @@
 #!/bin/bash
 ## bootstrap the whole system
 
+VBOX_NETWORKS=/etc/vbox/networks.conf
+VBOX_RANGES="* 172.16.0.0/24 172.16.1.0/24 10.0.0.0/24 10.0.1.0/24"
+
+ensure_vbox_networks() {
+  if [[ -z $(grep -s '172\.16\.0\.0' ${VBOX_NETWORKS}) ]]; then
+    if [[ ! -d /etc/vbox ]]; then
+      sudo mkdir /etc/vbox
+      CREATED_VBOX_DIR=true
+    fi
+    echo "${VBOX_RANGES}" | sudo tee -a ${VBOX_NETWORKS}
+    return 0
+  fi
+  return 1
+}
+
 # check for an existing clean.sh before doing anything else
 if [[ -f $(dirname "$0")/clean.sh ]]; then
   echo "clean.sh already exists; leaving it intact."
@@ -9,6 +24,7 @@ else
   INSTALLED_VAGRANT=false
   INSTALLED_VAGRANT_REPO=false
   INSTALLED_VBOX=false
+  ADDED_VBOX_NETWORKS=false
 
   if [[ -f /etc/debian_version ]]; then
     if [[ -z $(which vagrant) ]]; then
@@ -33,6 +49,9 @@ https://apt.releases.hashicorp.com ${HASHICORP_CODENAME} main" \
     fi
   fi
 
+  CREATED_VBOX_DIR=false
+  ensure_vbox_networks && ADDED_VBOX_NETWORKS=true
+
   # write clean.sh
   cat > $(dirname "$0")/clean.sh <<CLEAN
 #!/bin/bash
@@ -53,8 +72,23 @@ CLEAN
   if [[ $INSTALLED_VBOX == true ]]; then
     echo "sudo apt-get purge -y virtualbox" >> $(dirname "$0")/clean.sh
   fi
+  if [[ $ADDED_VBOX_NETWORKS == true ]]; then
+    echo "sudo sed -i '/172\.16\.0\.0/d' ${VBOX_NETWORKS}" >> $(dirname "$0")/clean.sh
+    if [[ $CREATED_VBOX_DIR == true ]]; then
+      echo "sudo rmdir /etc/vbox" >> $(dirname "$0")/clean.sh
+    fi
+  fi
 
   chmod +x $(dirname "$0")/clean.sh
+fi
+
+# allow our host-only network ranges in VirtualBox (runs on every bootstrap)
+CREATED_VBOX_DIR=false
+if ensure_vbox_networks; then
+  echo "sudo sed -i '/172\.16\.0\.0/d' ${VBOX_NETWORKS}" >> $(dirname "$0")/clean.sh
+  if [[ $CREATED_VBOX_DIR == true ]]; then
+    echo "sudo rmdir /etc/vbox" >> $(dirname "$0")/clean.sh
+  fi
 fi
 
 echo "You have seven (7) seconds to stop me before I destroy and rebuild your VMs."
