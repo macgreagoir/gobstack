@@ -8,90 +8,85 @@ fi
 
 source ${BASH_SOURCE%/*}/../defaults.sh
 
-if [ -z "`grep ^#gobstack /etc/nova/nova.conf`" ]; then
+if [ -z "$(grep ^#gobstack /etc/nova/nova.conf)" ]; then
   cp /etc/nova/nova.conf /etc/nova/nova.conf.default
 fi
 
 cat > /etc/nova/nova.conf <<NOVA
 #gobstack
 [DEFAULT]
-# api
-enabled_apis = ec2,osapi_compute,metadata
+# metadata and compute APIs only; EC2 compat removed in modern Nova
+enabled_apis = osapi_compute,metadata
 
-# auth
 auth_strategy = keystone
 
-# common
 lock_path = /var/lock/nova
-root_helper = sudo nova-rootwrap /etc/nova/rootwrap.conf
 state_path = /var/lib/nova
 my_ip = ${PUBLIC_IP}
 
-# ec2
-ec2_dmz_host = ${CONTROLLER_PUBLIC_IP}
-ec2_host = ${CONTROLLER_PUBLIC_IP}
-ec2_private_dns_show_ip = True
-keystone_ec2_url = http://${CONTROLLER_PUBLIC_IP}:5000/v2.0/ec2tokens
+transport_url = rabbit://openstack:openstack@${CONTROLLER_PUBLIC_IP}
 
-# hypervisor
-connection_type = libvirt
-libvirt_type = qemu
-libvirt_use_virtio_for_bridges = True
-
-# logging
-logdir = /var/log/nova
-verbose = True
-
-# network
-dhcpbridge_flagfile = /etc/nova/nova.conf
-dhcpbridge = /usr/bin/nova-dhcpbridge
-force_dhcp_release = True
-network_api_class = nova.network.neutronv2.api.API
-security_group_api = neutron
-linuxnet_interface_driver = nova.network.linux_net.LinuxOVSInterfaceDriver
+# neutron networking
+use_neutron = true
 firewall_driver = nova.virt.firewall.NoopFirewallDriver
 
-# object storage
-iscsi_helper = tgtadm
-iscsi_ip_address = ${STORAGE_PRIVATE_IP}
+# logging
+log_dir = /var/log/nova
 
-# rabbitmq
-rpc_backend = rabbit
-rabbit_host = ${CONTROLLER_PUBLIC_IP}
-rabbit_password = guest
+[api]
+auth_strategy = keystone
 
-# scheduling
-scheduler_default_filter = AllHostsFilter
-
-# volumes
-volume_api_class = nova.volume.cinder.API
-volume_driver = nova.volume.driver.ISCSIDriver
-volumes_path = /var/lib/nova/volumes
-
-# wsgi
-api_paste_config = /etc/nova/api-paste.ini
+[api_database]
+connection = mysql+pymysql://nova:${MYSQL_NOVA_PASS}@${CONTROLLER_PUBLIC_IP}/nova_api
 
 [database]
-connection = mysql://nova:${MYSQL_NOVA_PASS}@${CONTROLLER_PUBLIC_IP}/nova
+connection = mysql+pymysql://nova:${MYSQL_NOVA_PASS}@${CONTROLLER_PUBLIC_IP}/nova
 
 [keystone_authtoken]
-auth_uri = http://${CONTROLLER_PUBLIC_IP}:5000/v2.0
-identity_uri = http://${CONTROLLER_PUBLIC_IP}:35357
-admin_tenant_name = service
-admin_user = nova
-admin_password = nova
+www_authenticate_uri = http://${CONTROLLER_PUBLIC_IP}:5000
+auth_url = http://${CONTROLLER_PUBLIC_IP}:5000
+memcached_servers = ${CONTROLLER_PUBLIC_IP}:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+username = nova
+password = nova
 
 [glance]
-host = ${CONTROLLER_PUBLIC_IP}
+api_servers = http://${CONTROLLER_PUBLIC_IP}:9292
 
 [neutron]
-url = http://${CONTROLLER_PUBLIC_IP}:9696
-auth_strategy = keystone
-admin_tenant_name = service
-admin_username = neutron
-admin_password = neutron
-admin_auth_url = http://${CONTROLLER_PUBLIC_IP}:35357/v2.0
+auth_url = http://${CONTROLLER_PUBLIC_IP}:5000
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+region_name = RegionOne
+project_name = service
+username = neutron
+password = neutron
 service_metadata_proxy = true
 metadata_proxy_shared_secret = ${NEUTRON_METADATA_PASS}
+
+[placement]
+region_name = RegionOne
+project_domain_name = Default
+project_name = service
+auth_type = password
+user_domain_name = Default
+auth_url = http://${CONTROLLER_PUBLIC_IP}:5000/v3
+username = placement
+password = placement
+
+[libvirt]
+virt_type = qemu
+
+[vnc]
+enabled = true
+server_listen = ${PUBLIC_IP}
+server_proxyclient_address = ${PUBLIC_IP}
+
+[oslo_concurrency]
+lock_path = /var/lib/nova/tmp
 
 NOVA

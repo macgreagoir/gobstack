@@ -8,37 +8,34 @@ fi
 
 source ${BASH_SOURCE%/*}/../defaults.sh
 
-if [ -z "`grep ^#gobstack /etc/neutron/plugins/ml2/ml2_conf.ini`" ]; then
+if [ -z "$(grep ^#gobstack /etc/neutron/plugins/ml2/ml2_conf.ini)" ]; then
   cp /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugins/ml2/ml2_conf.ini.default
 fi
 
 cat > /etc/neutron/plugins/ml2/ml2_conf.ini <<ML2
 #gobstack
 [ml2]
-type_drivers = vxlan
+type_drivers = flat,vlan,vxlan
 tenant_network_types = vxlan
-mechanism_drivers = openvswitch
+mechanism_drivers = openvswitch,l2population
 
 [ml2_type_flat]
+flat_networks = provider
 
 [ml2_type_vlan]
 
-[ml2_type_gre]
-tunnel_id_ranges = 1:1000
-
 [ml2_type_vxlan]
-vni_ranges = 1001:2000
+vni_ranges = 1:1000
+
+[securitygroup]
+enable_ipset = True
 
 [ovs]
 local_ip = ${PRIVATE_IP}
-enable_tunneling = True
-tunnel_type = vxlan
+bridge_mappings = provider:br-ex
 
 [agent]
 tunnel_types = vxlan
-
-[securitygroup]
-firewall_driver = neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
-enable_security_group = True
+l2_population = True
 
 ML2

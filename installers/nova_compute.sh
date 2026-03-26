@@ -6,30 +6,23 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-# spits out junk to the console
-echo 'apt-get install -y python-guestfs' | at now +3 minutes
-
-# use nova-compute-qemu to avoid kvm inside a VM
+# use nova-compute with qemu to avoid kvm inside a VM
 apt-get install -y \
   ipset \
-  nova-compute-qemu \
+  nova-compute \
   neutron-common \
   neutron-plugin-ml2 \
-  neutron-plugin-openvswitch-agent \
-  linux-headers-`uname -r` \
-  openvswitch-datapath-dkms
+  neutron-openvswitch-agent \
+  linux-headers-$(uname -r)
 
-# make the kernel readable by normal users for qemu and libguestfs
-# https://bugs.launchpad.net/ubuntu/+source/linux/+bug/759725
-dpkg-statoverride  --update --add root root 0644 /boot/vmlinuz-$(uname -r)
-cat > /etc/kernel/postinst.d/statoverride <<SOVR
-#!/bin/sh
-version="$1"
-# passing the kernel version is required
-[ -z "${version}" ] && exit 0
-dpkg-statoverride --update --add root root 0644 /boot/vmlinuz-${version}
-SOVR
-chmod +x /etc/kernel/postinst.d/statoverride
+# configure nova-compute for qemu (no hardware virtualisation in a VM)
+cat > /etc/nova/nova-compute.conf <<NCOMP
+[DEFAULT]
+compute_driver = libvirt.LibvirtDriver
+
+[libvirt]
+virt_type = qemu
+NCOMP
 
 # let it route and disable packet destination filtering
 sed -i \
@@ -46,9 +39,12 @@ ovs-vsctl add-br br-int
 # write out nova.conf
 source ${BASH_SOURCE%/*}/../files/nova_conf.sh
 
-# ...and tweak it a wee bit
-sed -i "/^my_ip.*/ a\
-vnc_enabled = True\nvncserver_listen = 0.0.0.0\nvncserver_proxyclient_address = ${PUBLIC_IP}\nnovncproxy_base_url = http://${CONTROLLER_PUBLIC_IP}:6080/vnc_auto.html" /etc/nova/nova.conf
+# tweak for compute VNC
+sed -i "/^\[vnc\]/,/^\[/ {
+  /server_listen/ s/.*/server_listen = 0.0.0.0/
+  /server_proxyclient_address/ s/.*/server_proxyclient_address = ${PUBLIC_IP}/
+  /novncproxy_base_url/ s|.*|novncproxy_base_url = http://${CONTROLLER_PUBLIC_IP}:6080/vnc_lite.html|
+}" /etc/nova/nova.conf
 
 # for safety
 rm -f /var/lib/nova/nova.sqlite
@@ -57,7 +53,6 @@ rm -f /var/lib/nova/nova.sqlite
 source ${BASH_SOURCE%/*}/../files/neutron_conf.sh
 source ${BASH_SOURCE%/*}/../files/ml2_conf_ini.sh
 
-# restart 'em all
+# restart services
 source ${BASH_SOURCE%/*}/../tools/daemons_restart.sh nova
 source ${BASH_SOURCE%/*}/../tools/daemons_restart.sh neutron
-

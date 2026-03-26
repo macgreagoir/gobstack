@@ -1,6 +1,6 @@
 #!/bin/bash
 ## update /etc/neutron/neutron.conf
-## run on controller, network central and each compute node
+## run on controller, network node and each compute node
 
 if [[ $EUID -ne 0 ]]; then
   echo "This script must be run as root" 1>&2
@@ -14,9 +14,7 @@ fi
 
 source ${BASH_SOURCE%/*}/../defaults.sh
 
-SERVICE_TENANT_ID=`keystone tenant-list | awk '/service/ {print $2}'`
-
-if [ -z "`grep ^#gobstack /etc/neutron/neutron.conf`" ]; then
+if [ -z "$(grep ^#gobstack /etc/neutron/neutron.conf)" ]; then
   cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.default
 fi
 
@@ -33,37 +31,39 @@ allow_overlapping_ips = True
 
 auth_strategy = keystone
 
-notification_driver = neutron.openstack.common.notifier.rpc_notifier
-
-rpc_backend = rabbit
-rabbit_host = ${CONTROLLER_PUBLIC_IP}
-rabbit_password = guest
+transport_url = rabbit://openstack:openstack@${CONTROLLER_PUBLIC_IP}
 
 notify_nova_on_port_status_changes = True
 notify_nova_on_port_data_changes = True
-nova_url = http://${CONTROLLER_PUBLIC_IP}:8774/v2
-nova_admin_username = nova
-nova_admin_tenant_id = ${SERVICE_TENANT_ID}
-nova_admin_password = nova
-nova_admin_auth_url = http://${CONTROLLER_PUBLIC_IP}:35357/v2.0
-nova_region_name = RegionOne
-
-[quotas]
 
 [agent]
 root_helper = sudo /usr/bin/neutron-rootwrap /etc/neutron/rootwrap.conf
 
 [keystone_authtoken]
-auth_uri = http://${CONTROLLER_PUBLIC_IP}:5000/v2.0
-identity_uri = http://${CONTROLLER_PUBLIC_IP}:35357
-admin_tenant_name = service
-admin_user = neutron
-admin_password = neutron
-signing_dir = \$state_path/keystone-signing
+www_authenticate_uri = http://${CONTROLLER_PUBLIC_IP}:5000
+auth_url = http://${CONTROLLER_PUBLIC_IP}:5000
+memcached_servers = ${CONTROLLER_PUBLIC_IP}:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+username = neutron
+password = neutron
 
 [database]
-connection = mysql://neutron:${MYSQL_NEUTRON_PASS}@${CONTROLLER_PUBLIC_IP}:3306/neutron
+connection = mysql+pymysql://neutron:${MYSQL_NEUTRON_PASS}@${CONTROLLER_PUBLIC_IP}:3306/neutron
 
-[service_providers]
+[nova]
+auth_url = http://${CONTROLLER_PUBLIC_IP}:5000
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+region_name = RegionOne
+project_name = service
+username = nova
+password = nova
+
+[oslo_concurrency]
+lock_path = /var/lib/neutron/tmp
 
 NCONF
