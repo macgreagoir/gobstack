@@ -34,7 +34,8 @@ sysctl -p /etc/sysctl.conf
 
 # for neutron
 service openvswitch-switch restart
-ovs-vsctl add-br br-int
+ovs-vsctl add-br br-int || true
+ovs-vsctl add-br br-ex || true
 
 # write out nova.conf
 source ${BASH_SOURCE%/*}/../files/nova_conf.sh

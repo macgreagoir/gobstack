@@ -76,12 +76,14 @@ openstack security group rule create --proto icmp --remote-ip 0.0.0.0/0 default
 openstack security group rule create --proto tcp --dst-port 22 --remote-ip 0.0.0.0/0 default
 
 # create a keypair for the vagrant user as the non-admin user
-OS_PROJECT_NAME=${DEMO_TENANT_NAME} OS_USERNAME=${DEMO_USERNAME} \
-  openstack keypair create vagrant > ~vagrant/.ssh/vagrant.pem
+# openstack keypair create doesn't output the private key in Dalmatian, so generate locally
+ssh-keygen -t rsa -b 2048 -f ~vagrant/.ssh/vagrant.pem -N "" -q
 chmod 0600 ~vagrant/.ssh/vagrant.pem
-chown vagrant:vagrant ~vagrant/.ssh/vagrant.pem
+chown vagrant:vagrant ~vagrant/.ssh/vagrant.pem ~vagrant/.ssh/vagrant.pem.pub
+OS_PROJECT_NAME=${DEMO_TENANT_NAME} OS_USERNAME=${DEMO_USERNAME} OS_PASSWORD=${DEMO_PASSWORD} \
+  openstack keypair create --public-key ~vagrant/.ssh/vagrant.pem.pub vagrant
 
-OS_PROJECT_NAME=${DEMO_TENANT_NAME} OS_USERNAME=${DEMO_USERNAME} \
+OS_PROJECT_NAME=${DEMO_TENANT_NAME} OS_USERNAME=${DEMO_USERNAME} OS_PASSWORD=${DEMO_PASSWORD} \
   openstack keypair list
 
 # get a stackrc
