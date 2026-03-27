@@ -12,7 +12,7 @@ NET_ID=$(openstack network list -f value -c ID -c Name | awk "/${DEMO_TENANT_NAM
 RAND=$(< /dev/urandom tr -dc a-z0-9 | head -c3)
 INSTANCE_NAME="${DEMO_TENANT_NAME}_${RAND}"
 
-INSTANCE_ID=$(OS_PROJECT_NAME=${DEMO_TENANT_NAME} OS_USERNAME=${DEMO_USERNAME} \
+INSTANCE_ID=$(OS_PROJECT_NAME=${DEMO_TENANT_NAME} OS_USERNAME=${DEMO_USERNAME} OS_PASSWORD=${DEMO_PASSWORD} \
   openstack server create ${INSTANCE_NAME} \
   --image ${IMAGE_ID} \
   --flavor m1.tiny \
@@ -37,10 +37,11 @@ if [ -n "$INSTANCE_IP" ]; then
   openstack server show ${INSTANCE_ID}
 
   # give it a floating IP
-  FLOATING_IP=$(OS_PROJECT_NAME=${DEMO_TENANT_NAME} OS_USERNAME=${DEMO_USERNAME} \
+  FLOATING_IP=$(OS_PROJECT_NAME=${DEMO_TENANT_NAME} OS_USERNAME=${DEMO_USERNAME} OS_PASSWORD=${DEMO_PASSWORD} \
     openstack floating ip create ext-net -f value -c floating_ip_address)
   if [ -n "$FLOATING_IP" ]; then
-    openstack server add floating ip ${INSTANCE_NAME} ${FLOATING_IP}
+    OS_PROJECT_NAME=${DEMO_TENANT_NAME} OS_USERNAME=${DEMO_USERNAME} OS_PASSWORD=${DEMO_PASSWORD} \
+      openstack server add floating ip ${INSTANCE_NAME} ${FLOATING_IP}
   fi
 
   ## create a volume named for the instance

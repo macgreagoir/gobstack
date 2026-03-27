@@ -30,6 +30,16 @@ vni_ranges = 1:1000
 [securitygroup]
 enable_ipset = True
 
+ML2
+
+# In Dalmatian the OVS agent reads openvswitch_agent.ini, not ml2_conf.ini
+if [ -f /etc/neutron/plugins/ml2/openvswitch_agent.ini ]; then
+  if [ -z "$(grep ^#gobstack /etc/neutron/plugins/ml2/openvswitch_agent.ini)" ]; then
+    cp /etc/neutron/plugins/ml2/openvswitch_agent.ini \
+       /etc/neutron/plugins/ml2/openvswitch_agent.ini.default
+  fi
+  cat > /etc/neutron/plugins/ml2/openvswitch_agent.ini <<OVS
+#gobstack
 [ovs]
 local_ip = ${PRIVATE_IP}
 bridge_mappings = provider:br-ex
@@ -38,4 +48,8 @@ bridge_mappings = provider:br-ex
 tunnel_types = vxlan
 l2_population = True
 
-ML2
+[securitygroup]
+enable_ipset = True
+
+OVS
+fi

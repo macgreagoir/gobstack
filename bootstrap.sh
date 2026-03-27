@@ -108,5 +108,6 @@ controller_install='for s in mariadb keystone glance placement neutron_controlle
 vagrant ssh controller0 -c "$controller_install"
 vagrant ssh network0 -c 'sudo /vagrant/installers/neutron_network.sh'
 vagrant ssh storage0 -c 'for s in swift cinder; do sudo /vagrant/installers/${s}.sh; done'
-vagrant ssh controller0 -c 'sudo /vagrant/services/networks_create.sh; sudo /vagrant/services/image_create.sh'
+vagrant ssh controller0 -c 'sudo /vagrant/services/networks_create.sh; sudo /vagrant/services/image_create.sh; sudo /vagrant/services/flavours_create.sh'
 for i in 0 1; do vagrant ssh compute$i -c 'sudo /vagrant/installers/nova_compute.sh'; done
+vagrant ssh controller0 -c 'sudo nova-manage cell_v2 discover_hosts --verbose'
