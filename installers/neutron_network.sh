@@ -40,55 +40,56 @@ ip a del ${NETWORK_FLOATING_IP}/24 dev eth3 2>/dev/null || true
 ip r del ${FLOATING_RANGE} dev eth3 2>/dev/null || true
 
 # create the standard internal and external bridges
-ovs-vsctl add-br br-int
-ovs-vsctl add-br br-ex
-ovs-vsctl add-port br-ex eth3
+ovs-vsctl add-br br-int || true
+ovs-vsctl add-br br-ex || true
+ovs-vsctl add-port br-ex eth3 || true
 # as per the Vagrantfile
 # TODO fix hardcoded netmask
-ip a add ${NETWORK_FLOATING_IP}/24 dev br-ex
+ip a add ${NETWORK_FLOATING_IP}/24 dev br-ex || true
 ip l set dev br-ex up
 ip l set dev br-ex promisc on
 
 systemctl restart networking 2>/dev/null || true
 
-# config bridge on reboot
-cat > /etc/init.d/br-ex <<BREX
-#!/bin/bash
-## run from /etc/rc.local
+# config bridge on reboot via systemd
+rm -f /etc/init.d/br-ex
+cat > /etc/systemd/system/br-ex.service <<BREX
+[Unit]
+Description=Configure br-ex bridge for Neutron
+After=openvswitch-switch.service
+Requires=openvswitch-switch.service
 
-ip a del ${NETWORK_FLOATING_IP}/24 dev eth3 || true
-ip r del ${FLOATING_RANGE} dev eth3 || true
-ip a add ${NETWORK_FLOATING_IP}/24 dev br-ex || true
-ip l set dev br-ex up
-ip l set dev br-ex promisc on
-systemctl restart networking || true
-/vagrant/tools/daemons_restart.sh neutron
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'ip a del ${NETWORK_FLOATING_IP}/24 dev eth3 2>/dev/null; ip r del ${FLOATING_RANGE} dev eth3 2>/dev/null; ip a add ${NETWORK_FLOATING_IP}/24 dev br-ex; ip l set dev br-ex up; ip l set dev br-ex promisc on'
+RemainAfterExit=yes
 
+[Install]
+WantedBy=multi-user.target
 BREX
-chmod +x /etc/init.d/br-ex
-
-if [ -z "$(grep '\/etc\/init\.d\/br\-ex' /etc/rc.local)" ]; then
-  sed -i '/^exit 0/ i\
-/etc/init.d/br-ex\n' /etc/rc.local
-fi
+systemctl daemon-reload
+systemctl enable br-ex
 
 # conf files common to controller and compute nodes too
 source ${BASH_SOURCE%/*}/../files/neutron_conf.sh
 source ${BASH_SOURCE%/*}/../files/ml2_conf_ini.sh
 
-sed -i \
-  -e "s/localhost/${CONTROLLER_PUBLIC_IP}/" \
-  -e "s/# nova_metadata_host =.*/nova_metadata_host = ${CONTROLLER_PUBLIC_IP}/" \
-  -e "s/# metadata_proxy_shared_secret =.*/metadata_proxy_shared_secret = ${NEUTRON_METADATA_PASS}/" \
+grep -q '^nova_metadata_host' /etc/neutron/metadata_agent.ini || \
+  sed -i "/^\[DEFAULT\]/a nova_metadata_host = ${CONTROLLER_PUBLIC_IP}" \
+  /etc/neutron/metadata_agent.ini
+grep -q '^metadata_proxy_shared_secret' /etc/neutron/metadata_agent.ini || \
+  sed -i "/^\[DEFAULT\]/a metadata_proxy_shared_secret = ${NEUTRON_METADATA_PASS}" \
   /etc/neutron/metadata_agent.ini
 
 sed -i \
   -e 's/# dhcp_driver =.*/dhcp_driver = neutron.agent.linux.dhcp.Dnsmasq/' \
-  -e 's/# \(interface_driver = neutron.agent.linux.interface.OVSInterfaceDriver\)/\1/' \
+  /etc/neutron/dhcp_agent.ini
+grep -q '^interface_driver' /etc/neutron/dhcp_agent.ini || \
+  sed -i '/^\[DEFAULT\]/a interface_driver = neutron.agent.linux.interface.OVSInterfaceDriver' \
   /etc/neutron/dhcp_agent.ini
 
-sed -i \
-  -e 's/# \(interface_driver = neutron.agent.linux.interface.OVSInterfaceDriver\)/\1/' \
+grep -q '^interface_driver' /etc/neutron/l3_agent.ini || \
+  sed -i '/^\[DEFAULT\]/a interface_driver = neutron.agent.linux.interface.OVSInterfaceDriver' \
   /etc/neutron/l3_agent.ini
 
 source ${BASH_SOURCE%/*}/../tools/daemons_restart.sh neutron

@@ -36,8 +36,13 @@ if [ $(openstack router list -f value -c Name | grep -c "${DEMO_TENANT_NAME}-rou
   openstack router create --project ${DEMO_PROJECT_ID} ${DEMO_TENANT_NAME}-router
   openstack router set --external-gateway ext-net ${DEMO_TENANT_NAME}-router
 
+  # add a static route in the router so the qrouter namespace can reach the mgmt network
+  openstack router set \
+    --route destination=${PUBLIC_RANGE},gateway=${NETWORK_FLOATING_IP} \
+    ${DEMO_TENANT_NAME}-router
+
   # add a host route to reach the floating IP range via the network node
-  ip r a ${FLOATING_RANGE} via ${NETWORK_FLOATING_IP} 2>/dev/null || true
+  ip r a ${FLOATING_RANGE} via ${NETWORK_PUBLIC_IP} 2>/dev/null || true
 fi
 
 if [ $(openstack network list -f value -c Name | grep -c "${DEMO_TENANT_NAME}-net") -eq 0 ]; then
